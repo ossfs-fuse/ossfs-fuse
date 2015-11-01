@@ -1651,7 +1651,7 @@ string S3fsCurl::CalcSignature(string method, string strMD5, string content_type
     }
     requestHeaders = curl_slist_sort_insert(requestHeaders, string("x-oss-security-token:" + S3fsCurl::AWSAccessToken).c_str());
   }
-
+  
   StringToSign += method + "\n";
   StringToSign += strMD5 + "\n";        // md5
   StringToSign += content_type + "\n";
@@ -1664,9 +1664,15 @@ string S3fsCurl::CalcSignature(string method, string strMD5, string content_type
   }
   StringToSign += resource;
 
+  FPRNNN("strMD5: %s", strMD5.c_str());
+  FPRNNN("content_type: %s", content_type.c_str());
+  FPRNNN("S3fsCurl::AWSSecretAccessKey.c_str(): %s", S3fsCurl::AWSSecretAccessKey.c_str());
+  FPRNNN("StringToSign.c_str(): %s", StringToSign.c_str());
+
   const void* key            = S3fsCurl::AWSSecretAccessKey.data();
   int key_len                = S3fsCurl::AWSSecretAccessKey.size();
   const unsigned char* sdata = reinterpret_cast<const unsigned char*>(StringToSign.data());
+  FPRNNN("sdata: %s", sdata);
   int sdata_len              = StringToSign.size();
   unsigned char md[EVP_MAX_MD_SIZE];
   unsigned int md_len;
@@ -2246,6 +2252,9 @@ int S3fsCurl::CheckBucket(void)
           requestHeaders,
           string("Authorization: OSS " + AWSAccessKeyId + ":" +
           CalcSignature("GET", "", "", date, resource)).c_str());
+    FPRNNN("resource.c_str(): %s", resource.c_str());
+    FPRNNN("AWSAccessKeyId.c_str(): %s", AWSAccessKeyId.c_str());
+    FPRNNN("Signature.c_str(): %s", CalcSignature("GET", "", "", date, resource).c_str());
   }
   // setopt
   curl_easy_setopt(hCurl, CURLOPT_URL, url.c_str());
@@ -2253,6 +2262,9 @@ int S3fsCurl::CheckBucket(void)
   curl_easy_setopt(hCurl, CURLOPT_WRITEDATA, (void*)bodydata);
   curl_easy_setopt(hCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
   curl_easy_setopt(hCurl, CURLOPT_HTTPHEADER, requestHeaders);
+
+  // debug
+  FPRNNN("url.c_str(): %s", url.c_str());
 
   type = REQTYPE_CHKBUCKET;
 

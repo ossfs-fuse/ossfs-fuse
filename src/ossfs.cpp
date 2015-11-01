@@ -86,7 +86,7 @@ bool foreground2                  = false;
 bool nomultipart                  = false;
 std::string program_name;
 std::string service_path          = "/";
-std::string host                  = "http://oss.aliyuncs.com";
+std::string host                  = "http://oss-cn-hangzhou.aliyuncs.com";
 std::string bucket                = "";
 
 //-------------------------------------------------------------------

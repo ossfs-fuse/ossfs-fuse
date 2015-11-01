@@ -934,7 +934,7 @@ void show_help (void)
     "      This option should not be changed when you don't have a trouble \n"
     "      with performance.\n"
     "\n"
-    "   url (default=\"http://oss.aliyuncs.com\")\n"
+    "   url (default=\"http://oss-cn-hangzhou.aliyuncs.com\")\n"
     "      - sets the url to use to access Aliyun OSS\n"
     "\n"
     "   nomultipart (disable multipart uploads)\n"
