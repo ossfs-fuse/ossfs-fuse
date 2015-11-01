@@ -1,4 +1,4 @@
-THIS README CONTAINS OUTDATED INFORMATION - please refer to the wiki or --help
+THIS README.md CONTAINS OUTDATED INFORMATION - please refer to the wiki or --help
 
 OSSFS-Fuse
 
