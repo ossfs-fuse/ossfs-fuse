@@ -1,4 +1,5 @@
 #!/bin/bash
+# -*- coding: utf-8 -*-
 
 set -o xtrace
 set -o errexit
@@ -14,6 +15,10 @@ ALT_TEST_TEXT_FILE=test-ossfs-ALT.txt
 TEST_TEXT_FILE_LENGTH=15
 BIG_FILE=big-file-ossfs.txt
 BIG_FILE_LENGTH=$((25 * 1024 * 1024))
+
+########################
+# S3FS-Fuse Test Cases #
+########################
 
 function mk_test_file {
     if [ $# == 0 ]; then
@@ -336,23 +341,70 @@ function test_symlink {
     [ ! -f $ALT_TEST_TEXT_FILE ]
 }
 
+#########################
+# OSSFS-Fuse Test Cases #
+#########################
+
+function test_create_big_file {
+    echo "Testing ${FUNCNAME[0]} ..."
+    
+    file_of_6G="file_of_6G"
+    length_of_6G=$((1024 * 1024 * 1024 * 6))
+    
+    dd if=/dev/urandom of=${file_of_6G} bs=1M count=$((1024 * 6))
+    
+    if [ $(ls -l "${file_of_6G}"  | awk '{print $5}') -ne "${length_of_6G}" ]
+    then
+        echo "File length $(ls -l ${file_of_6G}  | awk '{print $5}') dosen't match exception ${length_of_6G}."
+        exit 1
+    fi
+    rm_test_file "${file_of_6G}"
+}
+
+function test_copy_big_file {
+    echo "Testing ${FUNCNAME[0]} ..."
+    
+    file_of_6G="file_of_6G"
+    length_of_6G=$((1024 * 1024 * 1024 * 6))
+
+    dd if=/dev/urandom of="/tmp/${file_of_6G}" bs=1M count=$((1024 * 6))
+    dd if="/tmp/${file_of_6G}" of="${file_of_6G}" bs=1M count=$((1024 * 6))
+    mv "${file_of_6G}" "${file_of_6G}-copy"
+
+    # Verify contents of file
+    echo "Comparing test file"
+    if ! cmp "/tmp/${file_of_6G}" "${file_of_6G}-copy"
+    then
+       exit 1
+    fi
+
+    rm -f "/tmp/${file_of_6G}"
+    rm_test_file "${file_of_6G}-copy"
+}
+
 function run_all_tests {
-    test_append_file
-    test_mv_file
-    test_mv_directory
-    test_redirects
-    test_mkdir_rmdir
-    test_chmod
-    test_chown
-    test_list
-    test_remove_nonempty_directory
-    # TODO: broken: https://github.com/s3fs-fuse/s3fs-fuse/issues/145
-    #test_rename_before_close
-    test_multipart_upload
-    # TODO: test disabled until S3Proxy 1.5.0 is released
-    #test_multipart_copy
-    test_special_characters
-    test_symlink
+    
+    # 
+    # test_append_file
+    # test_mv_file
+    # test_mv_directory
+    # test_redirects
+    # test_mkdir_rmdir
+    # test_chmod
+    # test_chown
+    # test_list
+    # test_remove_nonempty_directory
+    # # TODO: broken: https://github.com/s3fs-fuse/s3fs-fuse/issues/145
+    # #test_rename_before_close
+    # test_multipart_upload
+    # # TODO: test disabled until S3Proxy 1.5.0 is released
+    # #test_multipart_copy
+    # test_special_characters
+    # test_symlink
+    #
+
+    #test_create_big_file
+    test_copy_big_file
 }
 
 # Mount the bucket
