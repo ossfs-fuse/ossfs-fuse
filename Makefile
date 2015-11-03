@@ -79,7 +79,7 @@ build_triplet = x86_64-unknown-linux-gnu
 host_triplet = x86_64-unknown-linux-gnu
 target_triplet = x86_64-unknown-linux-gnu
 subdir = .
-DIST_COMMON = INSTALL NEWS README.md AUTHORS ChangeLog \
+DIST_COMMON = INSTALL NEWS README AUTHORS ChangeLog \
 	$(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) COPYING compile \
 	config.guess config.sub depcomp install-sh missing
@@ -245,10 +245,10 @@ SET_MAKE =
 SHELL = /bin/bash
 STRIP = 
 VERSION = 1.74
-abs_builddir = /root/jingwen.hjw/src/ossfs-fuse
-abs_srcdir = /root/jingwen.hjw/src/ossfs-fuse
-abs_top_builddir = /root/jingwen.hjw/src/ossfs-fuse
-abs_top_srcdir = /root/jingwen.hjw/src/ossfs-fuse
+abs_builddir = /root/jingwen.hjw/work/ossfs-fuse
+abs_srcdir = /root/jingwen.hjw/work/ossfs-fuse
+abs_top_builddir = /root/jingwen.hjw/work/ossfs-fuse
+abs_top_srcdir = /root/jingwen.hjw/work/ossfs-fuse
 ac_ct_CC = gcc
 ac_ct_CXX = g++
 am__include = include
@@ -276,7 +276,7 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /root/jingwen.hjw/src/ossfs-fuse/install-sh
+install_sh = ${SHELL} /root/jingwen.hjw/work/ossfs-fuse/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale

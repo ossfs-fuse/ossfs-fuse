@@ -368,10 +368,10 @@ SET_MAKE =
 SHELL = /bin/bash
 STRIP = 
 VERSION = 1.74
-abs_builddir = /root/jingwen.hjw/src/ossfs-fuse/test
-abs_srcdir = /root/jingwen.hjw/src/ossfs-fuse/test
-abs_top_builddir = /root/jingwen.hjw/src/ossfs-fuse
-abs_top_srcdir = /root/jingwen.hjw/src/ossfs-fuse
+abs_builddir = /root/jingwen.hjw/work/ossfs-fuse/test
+abs_srcdir = /root/jingwen.hjw/work/ossfs-fuse/test
+abs_top_builddir = /root/jingwen.hjw/work/ossfs-fuse
+abs_top_srcdir = /root/jingwen.hjw/work/ossfs-fuse
 ac_ct_CC = gcc
 ac_ct_CXX = g++
 am__include = include
@@ -399,7 +399,7 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /root/jingwen.hjw/src/ossfs-fuse/install-sh
+install_sh = ${SHELL} /root/jingwen.hjw/work/ossfs-fuse/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -423,15 +423,35 @@ target_vendor = unknown
 top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
+
+######################################################################
+# s3fs - FUSE-based file system backed by Amazon S3
+#
+# Copyright 2007-2008 Randy Rizun <rrizun@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+######################################################################
 TESTS = small-integration-test.sh
 EXTRA_DIST = \
    integration-test-common.sh \
    require-root.sh \
    small-integration-test.sh \
    mergedir.sh \
-   sample_delcache.sh \
-   sample_ahbe.conf
+   sample_delcache.sh
 
+testdir = test
 all: all-am
 
 .SUFFIXES:

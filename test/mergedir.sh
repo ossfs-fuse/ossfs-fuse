@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Merge old directory object to new.
-# For ossfs after v1.64
+# For s3fs after v1.64
 #
 
 ###
@@ -15,7 +15,7 @@ UsageFuntion()
     echo "  -all force all directoris"
     echo "       There is no -all option is only to merge for other S3 client."
     echo "       If -all is specified, this shell script merge all directory"
-    echo "       for ossfs old version."
+    echo "       for s3fs old version."
     echo ""
 }
 
@@ -61,7 +61,7 @@ fi
 ### Caution
 echo "#############################################################################"
 echo "[CAUTION]"
-echo "This program merges a directory made in ossfs which is older than version 1.64."
+echo "This program merges a directory made in s3fs which is older than version 1.64."
 echo "And made in other S3 client appilication."
 echo "This program may be have bugs which are not fixed yet."
 echo "Please execute this program by responsibility of your own."
