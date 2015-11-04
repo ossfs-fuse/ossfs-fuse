@@ -345,7 +345,7 @@ function test_symlink {
 # OSSFS-Fuse Test Cases #
 #########################
 
-function test_create_big_file {
+function test_dd_create_big_file {
     echo "Testing ${FUNCNAME[0]} ..."
     
     file_of_6G="file_of_6G"
@@ -361,7 +361,47 @@ function test_create_big_file {
     rm_test_file "${file_of_6G}"
 }
 
-function test_copy_big_file {
+function test_dd_copy_big_file_in {
+    echo "Testing ${FUNCNAME[0]} ..."
+    
+    file_of_6G="file_of_6G"
+    length_of_6G=$((1024 * 1024 * 1024 * 6))
+
+    dd if=/dev/urandom of="/tmp/${file_of_6G}" bs=1M count=$((1024 * 6))
+    dd if="/tmp/${file_of_6G}" of="${file_of_6G}" bs=1M count=$((1024 * 6))
+
+    # Verify contents of file
+    echo "Comparing test file"
+    if ! cmp "/tmp/${file_of_6G}" "${file_of_6G}"
+    then
+       exit 1
+    fi
+
+    rm -f "/tmp/${file_of_6G}"
+    rm_test_file "${file_of_6G}"
+}
+
+function test_dd_copy_big_file_out {
+    echo "Testing ${FUNCNAME[0]} ..."
+    
+    file_of_6G="file_of_6G"
+    length_of_6G=$((1024 * 1024 * 1024 * 6))
+
+    dd if=/dev/urandom of="${file_of_6G}" bs=1M count=$((1024 * 6))
+    dd if="${file_of_6G}" of="/tmp/${file_of_6G}" bs=1M count=$((1024 * 6))
+
+    # Verify contents of file
+    echo "Comparing test file"
+    if ! cmp "/tmp/${file_of_6G}" "${file_of_6G}"
+    then
+       exit 1
+    fi
+
+    rm -f "/tmp/${file_of_6G}"
+    rm_test_file "${file_of_6G}"
+}
+
+function test_move_big_file_inner {
     echo "Testing ${FUNCNAME[0]} ..."
     
     file_of_6G="file_of_6G"
@@ -380,6 +420,48 @@ function test_copy_big_file {
 
     rm -f "/tmp/${file_of_6G}"
     rm_test_file "${file_of_6G}-copy"
+}
+
+function test_move_big_file_in {
+    echo "Testing ${FUNCNAME[0]} ..."
+    
+    file_of_6G="file_of_6G"
+    length_of_6G=$((1024 * 1024 * 1024 * 6))
+
+    dd if=/dev/urandom of="/tmp/${file_of_6G}" bs=1M count=$((1024 * 6))
+    dd if="/tmp/${file_of_6G}" of="/tmp/${file_of_6G}-copy" bs=1M count=$((1024 * 6))
+    mv "/tmp/${file_of_6G}" "${file_of_6G}-copy"
+
+    # Verify contents of file
+    echo "Comparing test file"
+    if ! cmp "/tmp/${file_of_6G}" "${file_of_6G}-copy"
+    then
+       exit 1
+    fi
+
+    rm -f "/tmp/${file_of_6G}"
+    rm_test_file "${file_of_6G}-copy"
+}
+
+function test_move_big_file_out {
+    echo "Testing ${FUNCNAME[0]} ..."
+    
+    file_of_6G="file_of_6G"
+    length_of_6G=$((1024 * 1024 * 1024 * 6))
+
+    dd if=/dev/urandom of="${file_of_6G}" bs=1M count=$((1024 * 6))
+    dd if="${file_of_6G}" of="${file_of_6G}-copy" bs=1M count=$((1024 * 6))
+    mv "${file_of_6G}-copy" "/tmp/${file_of_6G}-copy"
+
+    # Verify contents of file
+    echo "Comparing test file"
+    if ! cmp "/tmp/${file_of_6G}-copy" "${file_of_6G}"
+    then
+       exit 1
+    fi
+
+    rm -f "/tmp/${file_of_6G}-copy"
+    rm_test_file "${file_of_6G}"
 }
 
 function run_all_tests {
@@ -403,8 +485,12 @@ function run_all_tests {
     # test_symlink
     #
 
-    #test_create_big_file
-    test_copy_big_file
+    test_dd_create_big_file
+    test_dd_copy_big_file_in
+    test_dd_copy_big_file_out
+    test_move_big_file_inner
+    test_move_big_file_in
+    test_move_big_file_out
 }
 
 # Mount the bucket
