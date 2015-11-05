@@ -2,7 +2,7 @@
 #define S3FS_S3_H_
 
 #define FUSE_USE_VERSION      26
-#define ONE_GB                1073741824LL
+#define UPLOAD_THRESHOLD_SIZE 104857600LL // 100M
 
 #include <fuse.h>
 
