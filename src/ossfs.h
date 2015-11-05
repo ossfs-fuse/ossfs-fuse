@@ -2,7 +2,7 @@
 #define S3FS_S3_H_
 
 #define FUSE_USE_VERSION      26
-#define FIVE_GB               5368709120LL
+#define ONE_GB                1073741824LL
 
 #include <fuse.h>
 

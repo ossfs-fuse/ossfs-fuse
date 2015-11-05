@@ -660,7 +660,7 @@ static int put_headers(const char* path, headers_t& meta, bool ow_sse_flg)
   //     get_object_attribute() returns error with initilizing buf.
   get_object_attribute(path, &buf);
 
-  if(buf.st_size >= FIVE_GB){
+  if(buf.st_size >= ONE_GB){
     // multipart
     if(0 != (result = ossfscurl.MultipartHeadRequest(path, buf.st_size, meta))){
       return result;
@@ -1317,7 +1317,7 @@ static int ossfs_rename(const char* from, const char* to)
   // files larger than 5GB must be modified via the multipart interface
   if(S_ISDIR(buf.st_mode)){
     result = rename_directory(from, to);
-  }else if(!nomultipart && buf.st_size >= FIVE_GB){
+  }else if(!nomultipart && buf.st_size >= ONE_GB){
     result = rename_large_object(from, to);
   }else{
     if(!nocopyapi && !norenameapi){

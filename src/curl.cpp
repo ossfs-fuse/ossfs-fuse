@@ -137,7 +137,7 @@ const char* BodyData::str(void) const
 // Class S3fsCurl
 //-------------------------------------------------------------------
 #define MULTIPART_SIZE              10485760          // 10MB
-#define MAX_MULTI_COPY_SOURCE_SIZE  524288000         // 500MB
+#define MAX_MULTI_COPY_SOURCE_SIZE  10485760          // 10MB
 
 #define	IAM_EXPIRE_MERGIN           (20 * 60)         // update timming
 #define	IAM_CRED_URL                "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
@@ -2429,6 +2429,12 @@ int S3fsCurl::CompleteMultipartPostRequest(const char* tpath, string& upload_id,
     return -1;
   }
 
+  // debug
+  FPRNNN("CompleteMultipartPostRequest complete parts, parts size: %lu, upload id: %s", parts.size(), upload_id.c_str());
+  for (int iter = 0; iter < (int)parts.size(); ++iter) {
+      FPRNNN("---------------------------- parts[%d]: %s, upper(parts[%d]): %s", iter, parts[iter].c_str(), iter, upper(parts[iter]).c_str());
+  }
+
   // make contents
   string postContent;
   postContent += "<CompleteMultipartUpload>\n";
@@ -2491,6 +2497,10 @@ int S3fsCurl::CompleteMultipartPostRequest(const char* tpath, string& upload_id,
 
   // request
   int result = RequestPerform();
+  
+  // debug
+  FPRNNN("CompleteMultipartPostRequest BodyData: %s", bodydata->str());
+  
   delete bodydata;
   bodydata = NULL;
   postdata = NULL;
@@ -2765,9 +2775,14 @@ int S3fsCurl::CopyMultipartPostRequest(const char* from, const char* to, int par
     const char* start_etag= strstr(bodydata->str(), "ETag");
     const char* end_etag  = strstr(bodydata->str(), "/ETag>");
 
-    partdata.etag.assign((start_etag + 11), (size_t)(end_etag - (start_etag + 11) - 7));
+    partdata.etag.assign((start_etag + 6), (size_t)(end_etag - (start_etag + 6) - 2));
     partdata.uploaded = true;
   }
+
+  // debug
+  DPRNNN("CopyMultipartPostRequest BodyData:%s", bodydata->str());
+  DPRNNN("CopyMultipartPostRequest HeadData:%s", bodydata->str());
+  
   delete bodydata;
   bodydata = NULL;
   delete headdata;
@@ -2908,8 +2923,18 @@ int S3fsCurl::MultipartRenameRequest(const char* from, const char* to, headers_t
     if(0 != (result = CopyMultipartPostRequest(from, to, (list.size() + 1), upload_id, meta))){
       return result;
     }
+    
+    // debug
+    FPRNNN("MultipartRenameRequest add part[%lu] to list, Etag: %s", list.size() + 1, partdata.etag.c_str());
+    
     list.push_back(partdata.etag);
     DestroyCurlHandle();
+  }
+
+  // debug
+  FPRNNN("MultipartRenameRequest complete part list, list size: %lu, upload id: %s", list.size(), upload_id.c_str());
+  for (int iter = 0; iter < (int)list.size(); ++iter) {
+      FPRNNN("---------------------- list[%d]: %s", iter, list[iter].c_str());
   }
 
   if(0 != (result = CompleteMultipartPostRequest(to, upload_id, list))){
