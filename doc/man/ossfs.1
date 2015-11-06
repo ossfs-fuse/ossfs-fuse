@@ -133,7 +133,7 @@ This option limits parallel request count which ossfs requests at once.
 It is necessary to set this value depending on a CPU and a network band.
 .TP
 \fB\-o\fR fd_page_size(default="52428800"(50MB))
-number of internal management page size for each file discriptor.
+number of internal management page size for each file descriptor.
 For delayed reading and writing by ossfs, ossfs manages pages which is separated from object. Each pages has a status that data is already loaded(or not loaded yet).
 This option should not be changed when you don't have a trouble with performance.
 .TP
