@@ -66,6 +66,14 @@ function rm_test_dir {
     fi
 }
 
+function remove_dir {
+    rmdir $1
+    if [ -e $1 ]; then
+        echo "Could not remove the test directory, it still exists: $1"
+        exit 1
+    fi
+}
+
 function test_append_file {
     echo "Testing append to file ..."
     # Write a small test file
@@ -464,6 +472,38 @@ function test_move_big_file_out {
     rm_test_file "${file_of_6G}"
 }
 
+function test_move_parallel_dir_with_many_file {
+    mkdir origin-dir
+    cd origin-dir
+    for i in {1..1234}
+    do
+        echo Hello > "file_$i";
+    done
+    cd ..
+    mv origin-dir renamed-dir
+    if [ $(ls renamed-dir | wc -l) -ne "1234" ]
+    then
+        exit 1
+    fi
+    # remove_dir renamed-dir
+}
+
+function test_move_nest_dir_with_many_file {
+    mkdir child-dir parent-dir
+    cd child-dir
+    for i in {1..1234}
+    do
+        echo Hello > "file_$i";
+    done
+    cd ..
+    mv child-dir parent-dir
+    if [ $(ls parent-dir/child-dir | wc -l) -ne "1234" ]
+    then
+        exit 1
+    fi
+    # remove_dir parent-dir
+}
+
 function run_all_tests {
     
     # 
@@ -485,12 +525,14 @@ function run_all_tests {
     # test_symlink
     #
 
-    test_dd_create_big_file
-    test_dd_copy_big_file_in
-    test_dd_copy_big_file_out
-    test_move_big_file_inner
-    test_move_big_file_in
-    test_move_big_file_out
+    #test_dd_create_big_file
+    #test_dd_copy_big_file_in
+    #test_dd_copy_big_file_out
+    #test_move_big_file_inner
+    #test_move_big_file_in
+    #test_move_big_file_out
+    #test_move_parallel_dir_with_many_file
+    test_move_nest_dir_with_many_file
 }
 
 # Mount the bucket
