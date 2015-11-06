@@ -1,8 +1,9 @@
-#ifndef S3FS_S3_H_
-#define S3FS_S3_H_
+#ifndef OSSFS_OSS_H_
+#define OSSFS_OSS_H_
 
 #define FUSE_USE_VERSION      26
-#define UPLOAD_THRESHOLD_SIZE 104857600LL // 100M
+#define UPLOAD_THRESHOLD_SIZE 104857600LL // 100M this value must be smaller than
+                                          // 1GB accroding to OSS's limitation
 
 #include <fuse.h>
 
@@ -97,4 +98,4 @@
 
 #endif // NSS_INIT_ENABLED
 
-#endif // S3FS_S3_H_
+#endif // OSSFS_OSS_H_
