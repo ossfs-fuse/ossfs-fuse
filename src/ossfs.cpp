@@ -1314,7 +1314,7 @@ static int ossfs_rename(const char* from, const char* to)
     return result;
   }
 
-  // files larger than 5GB must be modified via the multipart interface
+  // files larger than UPLOAD_THRESHOLD_SIZE must be modified via the multipart interface
   if(S_ISDIR(buf.st_mode)){
     result = rename_directory(from, to);
   }else if(!nomultipart && buf.st_size >= UPLOAD_THRESHOLD_SIZE){
@@ -2716,7 +2716,7 @@ static bool abort_uncomp_mp_list(uncomp_mp_list_t& list)
   char buff[1024];
 
   if(0 >= list.size()){
-    return false;
+    return true;
   }
   memset(buff, 0, sizeof(buff));
 
@@ -3762,6 +3762,10 @@ int main(int argc, char* argv[])
     exit(EXIT_FAILURE);
   }
 
+  // TODO: check if /tmp/ directory exists
+
+  // TODO: check if /tmp/ directory if full
+  
   // The second plain argument is the mountpoint
   // if the option was given, we all ready checked for a
   // readable, non-empty directory, this checks determines
