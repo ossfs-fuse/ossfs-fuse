@@ -134,15 +134,30 @@ string urlEncode(const string &s)
   string result;
   for (unsigned i = 0; i < s.length(); ++i) {
     if (s[i] == '/') { // Note- special case for fuse paths...
+      // debug
+      if (s[i] == '%')
+          printf("here is the 'percent' sign at line %d, s = %s, s[%d]\n", __LINE__, s.c_str(), i);
       result += s[i];
     } else if (isalnum(s[i])) {
+      // debug
+      if (s[i] == '%')
+          printf("here is the 'percent' sign at line %d, s = %s, s[%d]\n", __LINE__, s.c_str(), i);
       result += s[i];
     } else if (s[i] == '.' || s[i] == '-' || s[i] == '*' || s[i] == '_') {
+      // debug
+      if (s[i] == '%')
+          printf("here is the 'percent' sign at line %d, s = %s, s[%d]\n", __LINE__, s.c_str(), i);
       result += s[i];
     } else if (s[i] == ' ') {
+      // debug
+      if (s[i] == '%')
+          printf("here is the 'percent' sign at line %d, s = %s, s[%d]\n", __LINE__, s.c_str(), i);
       result += '+';
     } else {
-      result += "%";
+      // debug
+      if (s[i] == '%')
+          printf("here is the 'percent' sign at line %d, s = %s, s[%d]\n", __LINE__, s.c_str(), i);
+      result += '%';
       result += hexAlphabet[static_cast<unsigned char>(s[i]) / 16];
       result += hexAlphabet[static_cast<unsigned char>(s[i]) % 16];
     }

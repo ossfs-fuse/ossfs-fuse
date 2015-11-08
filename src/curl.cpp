@@ -1468,7 +1468,7 @@ int S3fsCurl::RequestPerform(void)
     curl_easy_getinfo(hCurl, CURLINFO_EFFECTIVE_URL , &ptr_url);
     DPRNNN("connecting to URL %s", SAFESTRPTR(ptr_url));
   }
-
+  
   // 1 attempt + retries...
   for(int retrycnt = S3fsCurl::retries; 0 < retrycnt; retrycnt--){
     // Requests
@@ -1653,26 +1653,32 @@ string S3fsCurl::CalcSignature(string method, string strMD5, string content_type
   }
   
   StringToSign += method + "\n";
+  FPRNNN("Method: %s", method.c_str());
+  
   StringToSign += strMD5 + "\n";        // md5
+  FPRNNN("CONTENT-MD5: %s", strMD5.c_str());
+  
   StringToSign += content_type + "\n";
+  FPRNNN("CONTENT-TYPE: %s", content_type.c_str());
+  
   StringToSign += date + "\n";
+  FPRNNN("DATE: %s", date.c_str());
+
+  FPRNNN("CanonicalizedOSSHeaders: ");
   for(curl_slist* headers = requestHeaders; headers; headers = headers->next){
     if(0 == strncmp(headers->data, "x-oss", 5)){
       StringToSign += headers->data;
       StringToSign += "\n";
+      FPRNNN("------------------------ %s", headers->data);
     }
   }
+  
   StringToSign += resource;
-
-  FPRNNN("strMD5: %s", strMD5.c_str());
-  FPRNNN("content_type: %s", content_type.c_str());
-  FPRNNN("S3fsCurl::AWSSecretAccessKey.c_str(): %s", S3fsCurl::AWSSecretAccessKey.c_str());
-  FPRNNN("StringToSign.c_str(): %s", StringToSign.c_str());
+  FPRNNN("CanonicalizedResource: %s", resource.c_str());
 
   const void* key            = S3fsCurl::AWSSecretAccessKey.data();
   int key_len                = S3fsCurl::AWSSecretAccessKey.size();
   const unsigned char* sdata = reinterpret_cast<const unsigned char*>(StringToSign.data());
-  FPRNNN("sdata: %s", sdata);
   int sdata_len              = StringToSign.size();
   unsigned char md[EVP_MAX_MD_SIZE];
   unsigned int md_len;
