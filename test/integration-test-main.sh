@@ -67,7 +67,7 @@ function rm_test_dir {
 }
 
 function remove_dir {
-    rmdir $1
+    rm -rf $1
     if [ -e $1 ]; then
         echo "Could not remove the test directory, it still exists: $1"
         exit 1
@@ -323,7 +323,7 @@ function test_multipart_copy {
     rm_test_file "${BIG_FILE}-copy"
 }
 
-function test_special_characters {
+function test_dir_with_special_characters {
     echo "Testing special characters ..."
 
     ls 'special' 2>&1 | grep -q 'No such file or directory'
@@ -352,6 +352,47 @@ function test_symlink {
 #########################
 # OSSFS-Fuse Test Cases #
 #########################
+
+function test_file_with_special_characters {
+    echo "Testing special characters ..."
+
+    echo "content-special" > "file-special"
+    #echo "content-special?" > "file-special?"
+    echo "content-special*" > "file-special*"
+    echo "content-special~" > "file-special~"
+    echo "content-specialµ" > "file-specialµ"
+    
+    if [ "content-special" != $(cat "file-special") ]
+    then
+        exit 1
+    fi
+    
+    #if [ "content-special?" -ne $(cat "file-special?") ]
+    #then
+    #    exit 1
+    #fi
+    
+    if [ "content-special*" != $(cat "file-special*") ]
+    then
+        exit 1
+    fi
+    
+    if [ "content-special~" != $(cat "file-special~") ]
+    then
+        exit 1
+    fi
+    
+    if [ "content-specialµ" != $(cat "file-specialµ") ]
+    then
+        exit 1
+    fi
+
+    rm_test_file "file-special"
+    #rm_test_file "file-special?"
+    rm_test_file "file-special*"
+    rm_test_file "file-special~"
+    rm_test_file "file-specialµ"
+}
 
 function test_dd_create_big_file {
     echo "Testing ${FUNCNAME[0]} ..."
@@ -438,7 +479,7 @@ function test_move_big_file_in {
 
     dd if=/dev/urandom of="/tmp/${file_of_6G}" bs=1M count=$((1024 * 6))
     dd if="/tmp/${file_of_6G}" of="/tmp/${file_of_6G}-copy" bs=1M count=$((1024 * 6))
-    mv "/tmp/${file_of_6G}" "${file_of_6G}-copy"
+    mv "/tmp/${file_of_6G}-copy" "${file_of_6G}-copy"
 
     # Verify contents of file
     echo "Comparing test file"
@@ -485,7 +526,8 @@ function test_move_parallel_dir_with_many_file {
     then
         exit 1
     fi
-    # remove_dir renamed-dir
+    remove_dir origin-dir
+    remove_dir renamed-dir
 }
 
 function test_move_nest_dir_with_many_file {
@@ -501,37 +543,38 @@ function test_move_nest_dir_with_many_file {
     then
         exit 1
     fi
-    # remove_dir parent-dir
+    remove_dir parent-dir
 }
 
 function run_all_tests {
     
-    # 
-    # test_append_file
-    # test_mv_file
-    # test_mv_directory
-    # test_redirects
-    # test_mkdir_rmdir
-    # test_chmod
-    # test_chown
-    # test_list
-    # test_remove_nonempty_directory
-    # # TODO: broken: https://github.com/s3fs-fuse/s3fs-fuse/issues/145
-    # #test_rename_before_close
-    # test_multipart_upload
-    # # TODO: test disabled until S3Proxy 1.5.0 is released
-    # #test_multipart_copy
-    # test_special_characters
-    # test_symlink
-    #
-
-    #test_dd_create_big_file
-    #test_dd_copy_big_file_in
-    #test_dd_copy_big_file_out
-    #test_move_big_file_inner
-    #test_move_big_file_in
-    #test_move_big_file_out
-    #test_move_parallel_dir_with_many_file
+     
+    test_append_file
+    test_mv_file
+    test_mv_directory
+    test_redirects
+    test_mkdir_rmdir
+    test_chmod
+    test_chown
+    test_list
+    test_remove_nonempty_directory
+    # TODO: broken: https://github.com/s3fs-fuse/s3fs-fuse/issues/145
+    #test_rename_before_close
+    test_multipart_upload
+    # TODO: test disabled until S3Proxy 1.5.0 is released
+    #test_multipart_copy
+    test_dir_with_special_characters
+    test_file_with_special_characters
+    test_symlink
+     
+    test_dd_create_big_file
+    test_dd_copy_big_file_in
+    test_dd_copy_big_file_out
+    test_move_big_file_inner
+    test_move_big_file_in
+    test_move_big_file_out
+    
+    test_move_parallel_dir_with_many_file
     test_move_nest_dir_with_many_file
 }
 
