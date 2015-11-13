@@ -1471,8 +1471,19 @@ int S3fsCurl::RequestPerform(void)
   
   // 1 attempt + retries...
   for(int retrycnt = S3fsCurl::retries; 0 < retrycnt; retrycnt--){
+    // debug
+    curl_easy_setopt(hCurl, CURLOPT_HEADERDATA, (void*)&responseHeaders);
+    curl_easy_setopt(hCurl, CURLOPT_HEADERFUNCTION, HeaderCallback);
+    
     // Requests
     CURLcode curlCode = curl_easy_perform(hCurl);
+
+    // debug
+    FPRN("bodydata: %s", (bodydata ? bodydata->str() : ""));
+    FPRN("headdata: %s", (headdata ? headdata->str() : ""));
+    FPRN("responseHeaders: ");
+    for (map<string, string>::const_iterator iter = responseHeaders.begin(); iter != responseHeaders.end(); ++iter)
+        FPRN("--------------- %s : %s", iter->first.c_str(), iter->second.c_str());
 
     // Check result
     switch(curlCode){
