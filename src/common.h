@@ -32,9 +32,15 @@
         syslog(LEVEL, __VA_ARGS__);
 
 #define SYSLOGPRINT(LEVEL, ...) \
+    if(LEVEL <= LOG_ERR || debug){          \
+          LOWSYSLOGPRINT(LEVEL, __VA_ARGS__); \
+        }
+
+/*
         if(LEVEL <= LOG_CRIT || debug){ \
           LOWSYSLOGPRINT(LEVEL, __VA_ARGS__); \
         }
+*/
 
 #define DPRINT(LEVEL, NEST, ...) \
         FPRINT(NEST, __VA_ARGS__); \
@@ -54,7 +60,7 @@
 #define DPRNCRIT(...)  DPRINT(LOG_CRIT, 0, __VA_ARGS__)
 #define DPRN(...)      DPRINT(LOG_ERR, 0, __VA_ARGS__)
 #define DPRNN(...)     DPRINT(LOG_DEBUG, 1, __VA_ARGS__)
-#define DPRNNN(...)    DPRINT(LOG_DEBUG, 2, __VA_ARGS__)
+#define DPRNNN(...)    DPRINT(LOG_ERR, 2, __VA_ARGS__)
 #define DPRNINFO(...)  DPRINT2(LOG_INFO, __VA_ARGS__)
 
 #define NR_DIR_SIZE 4096
