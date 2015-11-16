@@ -690,11 +690,9 @@ static int put_headers(const char* path, headers_t& meta, bool ow_sse_flg)
 
 static int ossfs_getattr(const char* path, struct stat* stbuf)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s]", path);
   
   int result;
-
-  FPRN("[path=%s]", path);
 
   // check parent directory attribute.
   if(0 != (result = check_parent_object_access(path, X_OK))){
@@ -786,13 +784,11 @@ static int create_file_object(const char* path, mode_t mode, uid_t uid, gid_t gi
 
 static int ossfs_mknod(const char *path, mode_t mode, dev_t rdev)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][mode=%04o][dev=%ju]", path, mode, (uintmax_t)rdev);
   
   int       result;
   headers_t meta;
   struct fuse_context* pcxt;
-
-  FPRN("[path=%s][mode=%04o][dev=%ju]", path, mode, (uintmax_t)rdev);
 
   if(NULL == (pcxt = fuse_get_context())){
     DPRN("###End###");
@@ -813,13 +809,11 @@ static int ossfs_mknod(const char *path, mode_t mode, dev_t rdev)
 
 static int ossfs_create(const char* path, mode_t mode, struct fuse_file_info* fi)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][mode=%04o][flags=%d]", path, mode, fi->flags);
   
   int result;
   headers_t meta;
   struct fuse_context* pcxt;
-
-  FPRN("[path=%s][mode=%04o][flags=%d]", path, mode, fi->flags);
 
   if(NULL == (pcxt = fuse_get_context())){
     DPRN("###End###");
@@ -886,12 +880,10 @@ static int create_directory_object(const char* path, mode_t mode, time_t time, u
 
 static int ossfs_mkdir(const char* path, mode_t mode)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][mode=%04o]", path, mode);
     
   int result;
   struct fuse_context* pcxt;
-
-  FPRN("[path=%s][mode=%04o]", path, mode);
 
   if(NULL == (pcxt = fuse_get_context())){
     DPRN("###End###");
@@ -921,11 +913,9 @@ static int ossfs_mkdir(const char* path, mode_t mode)
 
 static int ossfs_unlink(const char* path)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s]", path);
   
   int result;
-
-  FPRN("[path=%s]", path);
 
   if(0 != (result = check_parent_object_access(path, W_OK | X_OK))){
     DPRN("###End###");
@@ -958,12 +948,10 @@ static int directory_empty(const char* path)
 
 static int ossfs_rmdir(const char* path)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s]", path);
   int result;
   string strpath;
   struct stat stbuf;
-
-  FPRN("[path=%s]", path);
 
   if(0 != (result = check_parent_object_access(path, W_OK | X_OK))){
     DPRN("###End###");
@@ -1018,12 +1006,10 @@ static int ossfs_rmdir(const char* path)
 
 static int ossfs_symlink(const char* from, const char* to)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [from=%s][to=%s]", from, to);
 
   int result;
   struct fuse_context* pcxt;
-
-  FPRN("[from=%s][to=%s]", from, to);
 
   if(NULL == (pcxt = fuse_get_context())){
     DPRN("###End###");
@@ -1345,12 +1331,10 @@ static int rename_directory(const char* from, const char* to)
 
 static int ossfs_rename(const char* from, const char* to)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [from=%s][to=%s]", from, to);
   
   struct stat buf;
   int result;
-
-  FPRN("[from=%s][to=%s]", from, to);
 
   if(0 != (result = check_parent_object_access(to, W_OK | X_OK))){
     // not permmit writing "to" object parent dir.
@@ -1387,15 +1371,14 @@ static int ossfs_rename(const char* from, const char* to)
 
 static int ossfs_link(const char* from, const char* to)
 {
-  DPRN("###Begin###");
-  FPRN("[from=%s][to=%s]", from, to);
+  DPRN("###Begin### [from=%s][to=%s]", from, to);
   DPRN("###End###");
   return -EPERM;
 }
 
 static int ossfs_chmod(const char* path, mode_t mode)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][mode=%04o]", path, mode);
   
   int result;
   string strpath;
@@ -1405,10 +1388,8 @@ static int ossfs_chmod(const char* path, mode_t mode)
   struct stat stbuf;
   int nDirType = DIRTYPE_UNKNOWN;
 
-  FPRN("[path=%s][mode=%04o]", path, mode);
-
   if(0 == strcmp(path, "/")){
-    DPRNNN("Could not change mode for maount point.");
+    DPRN("Could not change mode for mount point.");
     DPRN("###End###");
     return -EIO;
   }
@@ -1472,7 +1453,7 @@ static int ossfs_chmod(const char* path, mode_t mode)
 
 static int ossfs_chmod_nocopy(const char* path, mode_t mode)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][mode=%04o]", path, mode);
   
   int result;
   string strpath;
@@ -1482,10 +1463,8 @@ static int ossfs_chmod_nocopy(const char* path, mode_t mode)
   struct stat stbuf;
   int nDirType = DIRTYPE_UNKNOWN;
 
-  FPRNN("[path=%s][mode=%04o]", path, mode);
-
   if(0 == strcmp(path, "/")){
-    DPRNNN("Could not change mode for maount point.");
+    DPRN("Could not change mode for mount point.");
     DPRN("###End###");
     return -EIO;
   }
@@ -1563,7 +1542,7 @@ static int ossfs_chmod_nocopy(const char* path, mode_t mode)
 
 static int ossfs_chown(const char* path, uid_t uid, gid_t gid)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][uid=%u][gid=%u]", path, (unsigned int)uid, (unsigned int)gid);
   
   int result;
   string strpath;
@@ -1573,10 +1552,8 @@ static int ossfs_chown(const char* path, uid_t uid, gid_t gid)
   struct stat stbuf;
   int nDirType = DIRTYPE_UNKNOWN;
 
-  FPRN("[path=%s][uid=%u][gid=%u]", path, (unsigned int)uid, (unsigned int)gid);
-
   if(0 == strcmp(path, "/")){
-    DPRNNN("Could not change owner for maount point.");
+    DPRN("Could not change owner for mount point.");
     DPRN("###End###");
     return -EIO;
   }
@@ -1655,7 +1632,7 @@ static int ossfs_chown(const char* path, uid_t uid, gid_t gid)
 
 static int ossfs_chown_nocopy(const char* path, uid_t uid, gid_t gid)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][uid=%u][gid=%u]", path, (unsigned int)uid, (unsigned int)gid);
   
   int result;
   string strpath;
@@ -1665,10 +1642,8 @@ static int ossfs_chown_nocopy(const char* path, uid_t uid, gid_t gid)
   struct stat stbuf;
   int nDirType = DIRTYPE_UNKNOWN;
 
-  FPRNN("[path=%s][uid=%u][gid=%u]", path, (unsigned int)uid, (unsigned int)gid);
-
   if(0 == strcmp(path, "/")){
-    DPRNNN("Could not change owner for maount point.");
+    DPRN("Could not change owner for mount point.");
     DPRN("###End###");
     return -EIO;
   }
@@ -1756,7 +1731,7 @@ static int ossfs_chown_nocopy(const char* path, uid_t uid, gid_t gid)
 
 static int ossfs_utimens(const char* path, const struct timespec ts[2])
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][mtime=%jd]", path, (intmax_t)(ts[1].tv_sec));
   
   int result;
   string strpath;
@@ -1766,10 +1741,8 @@ static int ossfs_utimens(const char* path, const struct timespec ts[2])
   struct stat stbuf;
   int nDirType = DIRTYPE_UNKNOWN;
 
-  FPRN("[path=%s][mtime=%jd]", path, (intmax_t)(ts[1].tv_sec));
-
   if(0 == strcmp(path, "/")){
-    DPRNNN("Could not change mtime for maount point.");
+    DPRN("Could not change mtime for mount point.");
     DPRN("###End###");
     return -EIO;
   }
@@ -1834,7 +1807,7 @@ static int ossfs_utimens(const char* path, const struct timespec ts[2])
 
 static int ossfs_utimens_nocopy(const char* path, const struct timespec ts[2])
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][mtime=%s]", path, str(ts[1].tv_sec).c_str());
   
   int result;
   string strpath;
@@ -1844,10 +1817,8 @@ static int ossfs_utimens_nocopy(const char* path, const struct timespec ts[2])
   struct stat stbuf;
   int nDirType = DIRTYPE_UNKNOWN;
 
-  FPRNN("[path=%s][mtime=%s]", path, str(ts[1].tv_sec).c_str());
-
   if(0 == strcmp(path, "/")){
-    DPRNNN("Could not change mtime for maount point.");
+    DPRN("Could not change mtime for mount point.");
     DPRN("###End###");
     return -EIO;
   }
@@ -1935,13 +1906,11 @@ static int ossfs_utimens_nocopy(const char* path, const struct timespec ts[2])
 
 static int ossfs_truncate(const char* path, off_t size)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][size=%jd]", path, (intmax_t)size);
   
   int result;
   headers_t meta;
   FdEntity* ent = NULL;
-
-  FPRN("[path=%s][size=%jd]", path, (intmax_t)size);
 
   if(0 != (result = check_parent_object_access(path, X_OK))){
     DPRN("###End###");
@@ -1994,13 +1963,11 @@ static int ossfs_truncate(const char* path, off_t size)
 
 static int ossfs_open(const char* path, struct fuse_file_info* fi)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][flags=%d]", path, fi->flags);
   
   int result;
   headers_t meta;
   struct stat st;
-
-  FPRN("[path=%s][flags=%d]", path, fi->flags);
 
   // clear stat for reading fresh stat.
   // (if object stat is changed, we refresh it. then ossfs gets always
@@ -2045,11 +2012,9 @@ static int ossfs_open(const char* path, struct fuse_file_info* fi)
 
 static int ossfs_read(const char* path, char* buf, size_t size, off_t offset, struct fuse_file_info* fi)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][size=%zu][offset=%jd][fd=%llu]", path, size, (intmax_t)offset, (unsigned long long)(fi->fh));
   
   ssize_t res;
-
-  FPRNINFO("[path=%s][size=%zu][offset=%jd][fd=%llu]", path, size, (intmax_t)offset, (unsigned long long)(fi->fh));
 
   FdEntity* ent;
   if(NULL == (ent = FdManager::get()->ExistOpen(path))){
@@ -2081,11 +2046,9 @@ static int ossfs_read(const char* path, char* buf, size_t size, off_t offset, st
 
 static int ossfs_write(const char* path, const char* buf, size_t size, off_t offset, struct fuse_file_info* fi)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][size=%zu][offset=%jd][fd=%llu]", path, size, (intmax_t)offset, (unsigned long long)(fi->fh));
   
   ssize_t res;
-
-  FPRNINFO("[path=%s][size=%zu][offset=%jd][fd=%llu]", path, size, (intmax_t)offset, (unsigned long long)(fi->fh));
 
   FdEntity* ent;
   if(NULL == (ent = FdManager::get()->ExistOpen(path))){
@@ -2107,7 +2070,7 @@ static int ossfs_write(const char* path, const char* buf, size_t size, off_t off
 
 static int ossfs_statfs(const char* path, struct statvfs* stbuf)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s]", path);
   
   // 256T
   stbuf->f_bsize  = 0X1000000;
@@ -2122,11 +2085,9 @@ static int ossfs_statfs(const char* path, struct statvfs* stbuf)
 
 static int ossfs_flush(const char* path, struct fuse_file_info* fi)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][fd=%llu]", path, (unsigned long long)(fi->fh));
   
   int result;
-
-  FPRN("[path=%s][fd=%llu]", path, (unsigned long long)(fi->fh));
 
   int mask = (O_RDONLY != (fi->flags & O_ACCMODE) ? W_OK : R_OK);
   if(0 != (result = check_parent_object_access(path, X_OK))){
@@ -2171,8 +2132,7 @@ static int ossfs_flush(const char* path, struct fuse_file_info* fi)
 
 static int ossfs_release(const char* path, struct fuse_file_info* fi)
 {
-  DPRN("###Begin###");
-  FPRN("[path=%s][fd=%llu]", path, (unsigned long long)(fi->fh));
+  DPRN("###Begin### [path=%s][fd=%llu]", path, (unsigned long long)(fi->fh));
 
   // [NOTICE]
   // At first, we remove stats cache.
@@ -2209,12 +2169,10 @@ static int ossfs_release(const char* path, struct fuse_file_info* fi)
 
 static int ossfs_opendir(const char* path, struct fuse_file_info* fi)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s][flags=%d]", path, fi->flags);
     
   int result;
   int mask = (O_RDONLY != (fi->flags & O_ACCMODE) ? W_OK : R_OK) | X_OK;
-
-  FPRN("[path=%s][flags=%d]", path, fi->flags);
 
   if(0 == (result = check_object_access(path, mask, NULL))){
     result = check_parent_object_access(path, mask);
@@ -2343,13 +2301,11 @@ static int readdir_multi_head(const char* path, S3ObjList& head, void* buf, fuse
 
 static int ossfs_readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info* fi)
 {
-  DPRN("###Begin###");
+  DPRN("###Begin### [path=%s]", path);
   
   S3ObjList head;
   s3obj_list_t headlist;
   int result;
-
-  FPRN("[path=%s]", path);
 
   if(0 != (result = check_object_access(path, X_OK, NULL))){
     DPRN("###End###");
@@ -2818,12 +2774,11 @@ static void ossfs_destroy(void*)
 
 static int ossfs_access(const char* path, int mask)
 {
-  DPRN("###Begin###");
-  FPRN("[path=%s][mask=%s%s%s%s]", path,
-          ((mask & R_OK) == R_OK) ? "R_OK " : "",
-          ((mask & W_OK) == W_OK) ? "W_OK " : "",
-          ((mask & X_OK) == X_OK) ? "X_OK " : "",
-          (mask == F_OK) ? "F_OK" : "");
+  DPRN("###Begin### [path=%s][mask=%s%s%s%s]", path,
+       ((mask & R_OK) == R_OK) ? "R_OK " : "",
+       ((mask & W_OK) == W_OK) ? "W_OK " : "",
+       ((mask & X_OK) == X_OK) ? "X_OK " : "",
+       (mask == F_OK) ? "F_OK" : "");
 
   int result = check_object_access(path, mask, NULL);
   S3FS_MALLOCTRIM(0);
