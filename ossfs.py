@@ -96,11 +96,13 @@ def start():
         print output
         exit(1)
 
+    status, output = getstatusoutput("chmod 600 $HOME/.passwd-ossfs")
+    if status != 0:
+        print u"更改 $HOME/.passwd-ossfs 读写权限失败，输出："
+        print output
+        exit(1)
+
     # start
-    cmd = "./src/ossfs %s %s -o passwd_file=%s,url=%s" % (parameter_dict["bucket_name"].strip(),
-                                                          parameter_dict["mount_dir"].strip(),
-                                                          "$HOME/.passwd-ossfs",
-                                                          parameter_dict["region_url"].strip())
     status, output = getstatusoutput("./src/ossfs %s %s -o passwd_file=%s,url=%s" % (parameter_dict["bucket_name"].strip(),
                                                                                      parameter_dict["mount_dir"].strip(),
                                                                                      "$HOME/.passwd-ossfs",
