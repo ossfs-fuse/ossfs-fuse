@@ -1458,6 +1458,16 @@ bool S3fsCurl::RemakeHandle(void)
   return true;
 }
 
+void S3fsCurl::PrintResponseLog(void)
+{
+    DPRNNN("bodydata: %s", (bodydata ? bodydata->str() : ""));
+    DPRNNN("headdata: %s", (headdata ? headdata->str() : ""));
+    DPRNNN("responseHeaders: ");
+    for (map<string, string>::const_iterator iter = responseHeaders.begin(); iter != responseHeaders.end(); ++iter) {
+        DPRNNN("--------------- %s : %s", iter->first.c_str(), iter->second.c_str());
+    }
+}
+
 //
 // returns curl return code
 //
@@ -1472,6 +1482,8 @@ int S3fsCurl::RequestPerform(void)
   // 1 attempt + retries...
   for(int retrycnt = S3fsCurl::retries; 0 < retrycnt; retrycnt--){
     // Requests
+    curl_easy_setopt(hCurl, CURLOPT_HEADERDATA, (void*)&responseHeaders); // TODO: setting of curl_easy_setopt should be
+    curl_easy_setopt(hCurl, CURLOPT_HEADERFUNCTION, HeaderCallback);      //       finished at each caller of RequestPerform()
     CURLcode curlCode = curl_easy_perform(hCurl);
 
     // Check result
@@ -1480,6 +1492,7 @@ int S3fsCurl::RequestPerform(void)
         // Need to look at the HTTP response code
         if(0 != curl_easy_getinfo(hCurl, CURLINFO_RESPONSE_CODE, &LastResponseCode)){
           DPRNNN("curl_easy_getinfo failed while trying to retrieve HTTP response code");
+          PrintResponseLog();
           return -EIO;
         }
         DPRNNN("HTTP response code %ld", LastResponseCode);
@@ -1489,6 +1502,7 @@ int S3fsCurl::RequestPerform(void)
         }
         if(500 <= LastResponseCode){
           DPRNNN("###HTTP response=%ld", LastResponseCode);
+          PrintResponseLog();
           sleep(4);
           break; 
         }
@@ -1498,68 +1512,81 @@ int S3fsCurl::RequestPerform(void)
           case 400:
             DPRNNN("HTTP response code 400 was returned, returing EIO.");
             DPRNINFO("Body Text: %s", (bodydata ? bodydata->str() : ""));
+            PrintResponseLog();
             return -EIO;
 
           case 403:
             DPRNNN("HTTP response code 403 was returned, returning EPERM");
             DPRNINFO("Body Text: %s", (bodydata ? bodydata->str() : ""));
+            PrintResponseLog();
             return -EPERM;
 
           case 404:
             DPRNNN("HTTP response code 404 was returned, returning ENOENT");
             DPRNINFO("Body Text: %s", (bodydata ? bodydata->str() : ""));
+            PrintResponseLog();
             return -ENOENT;
 
           default:
             DPRNNN("HTTP response code = %ld, returning EIO", LastResponseCode);
             DPRNINFO("Body Text: %s", (bodydata ? bodydata->str() : ""));
+            PrintResponseLog();
             return -EIO;
         }
         break;
 
       case CURLE_WRITE_ERROR:
         DPRN("### CURLE_WRITE_ERROR");
+        PrintResponseLog();
         sleep(2);
         break; 
 
       case CURLE_OPERATION_TIMEDOUT:
         DPRN("### CURLE_OPERATION_TIMEDOUT");
+        PrintResponseLog();
         sleep(2);
         break; 
 
       case CURLE_COULDNT_RESOLVE_HOST:
         DPRN("### CURLE_COULDNT_RESOLVE_HOST");
+        PrintResponseLog();
         sleep(2);
         break; 
 
       case CURLE_COULDNT_CONNECT:
         DPRN("### CURLE_COULDNT_CONNECT");
+        PrintResponseLog();
         sleep(4);
         break; 
 
       case CURLE_GOT_NOTHING:
         DPRN("### CURLE_GOT_NOTHING");
+        PrintResponseLog();
         sleep(4);
         break; 
 
       case CURLE_ABORTED_BY_CALLBACK:
         DPRN("### CURLE_ABORTED_BY_CALLBACK");
+        PrintResponseLog();
         sleep(4);
         S3fsCurl::curl_times[hCurl] = time(0);
         break; 
 
       case CURLE_PARTIAL_FILE:
         DPRN("### CURLE_PARTIAL_FILE");
+        PrintResponseLog();
         sleep(4);
         break; 
 
       case CURLE_SEND_ERROR:
         DPRN("### CURLE_SEND_ERROR");
+        PrintResponseLog();
         sleep(2);
         break;
 
       case CURLE_RECV_ERROR:
         DPRN("### CURLE_RECV_ERROR");
+        PrintResponseLog();
         sleep(2);
         break;
 
@@ -1573,6 +1600,7 @@ int S3fsCurl::RequestPerform(void)
           break; // retry with CAINFO
         }
         DPRNCRIT("curlCode: %d  msg: %s", curlCode, curl_easy_strerror(curlCode));
+        PrintResponseLog();
         exit(EXIT_FAILURE);
         break;
 
@@ -1588,6 +1616,7 @@ int S3fsCurl::RequestPerform(void)
         }else
           DPRNNN("my_curl_easy_perform: curlCode: %d -- %s", curlCode, curl_easy_strerror(curlCode));
         }
+        PrintResponseLog();
         exit(EXIT_FAILURE);
         break;
 #endif
@@ -1595,6 +1624,7 @@ int S3fsCurl::RequestPerform(void)
       // This should be invalid since curl option HTTP FAILONERROR is now off
       case CURLE_HTTP_RETURNED_ERROR:
         DPRN("### CURLE_HTTP_RETURNED_ERROR");
+        PrintResponseLog();
 
         if(0 != curl_easy_getinfo(hCurl, CURLINFO_RESPONSE_CODE, &LastResponseCode)){
           return -EIO;
@@ -1613,6 +1643,7 @@ int S3fsCurl::RequestPerform(void)
       // Unknown CURL return code
       default:
         DPRNCRIT("###curlCode: %d  msg: %s", curlCode, curl_easy_strerror(curlCode));
+        PrintResponseLog();
         exit(EXIT_FAILURE);
         break;
     }

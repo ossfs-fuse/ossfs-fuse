@@ -643,7 +643,7 @@ static FdEntity* get_local_fent(const char* path, bool is_load)
 }
 
 /**
- * create or update s3 meta
+ * create or update oss meta
  * ow_sse_flg is for over writing sse header by use_sse option.
  * @return fuse return code
  */
@@ -655,7 +655,7 @@ static int put_headers(const char* path, headers_t& meta, bool ow_sse_flg)
 
   FPRNNN("[path=%s]", path);
 
-  // files larger than 5GB must be modified via the multipart interface
+  // files larger than UPLOAD_THRESHOLD_SIZE must be modified via the multipart interface
   // *** If there is not target object(a case of move command),
   //     get_object_attribute() returns error with initilizing buf.
   get_object_attribute(path, &buf);
@@ -690,20 +690,18 @@ static int put_headers(const char* path, headers_t& meta, bool ow_sse_flg)
 
 static int ossfs_getattr(const char* path, struct stat* stbuf)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s]", path);
   
   int result;
 
-  FPRN("[path=%s]", path);
-
   // check parent directory attribute.
   if(0 != (result = check_parent_object_access(path, X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
   if(0 != (result = check_object_access(path, F_OK, stbuf))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   // If has already opened fd, the st_size shuld be instead.
@@ -721,23 +719,23 @@ static int ossfs_getattr(const char* path, struct stat* stbuf)
   FPRNINFO("[path=%s] uid=%u, gid=%u, mode=%04o", path, (unsigned int)(stbuf->st_uid), (unsigned int)(stbuf->st_gid), stbuf->st_mode);
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 
 static int ossfs_readlink(const char* path, char* buf, size_t size)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin###");
   
   if(!path || !buf || 0 >= size){
-    FPRN("###End###");
+    DPRN("###End###");
     return 0;
   }
   // Open
   FdEntity*   ent;
   if(NULL == (ent = get_local_fent(path))){
     DPRN("could not get fent(file=%s)", path);
-    FPRN("###End###");
+    DPRN("###End###");
     return -EIO;
   }
   // Get size
@@ -745,7 +743,7 @@ static int ossfs_readlink(const char* path, char* buf, size_t size)
   if(!ent->GetSize(readsize)){
     DPRN("could not get file size(file=%s)", path);
     FdManager::get()->Close(ent);
-    FPRN("###End###");
+    DPRN("###End###");
     return -EIO;
   }
   if(static_cast<off_t>(size) <= readsize){
@@ -756,7 +754,7 @@ static int ossfs_readlink(const char* path, char* buf, size_t size)
   if(0 > (ressize = ent->Read(buf, 0, static_cast<size_t>(readsize)))){
     DPRN("could not read file(file=%s, errno=%zd)", path, ressize);
     FdManager::get()->Close(ent);
-    FPRN("###End###");
+    DPRN("###End###");
     return static_cast<int>(ressize);
   }
   buf[ressize] = '\0';
@@ -764,7 +762,7 @@ static int ossfs_readlink(const char* path, char* buf, size_t size)
   FdManager::get()->Close(ent);
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return 0;
 }
 
@@ -786,77 +784,73 @@ static int create_file_object(const char* path, mode_t mode, uid_t uid, gid_t gi
 
 static int ossfs_mknod(const char *path, mode_t mode, dev_t rdev)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][mode=%04o][dev=%ju]", path, mode, (uintmax_t)rdev);
   
   int       result;
   headers_t meta;
   struct fuse_context* pcxt;
 
-  FPRN("[path=%s][mode=%04o][dev=%ju]", path, mode, (uintmax_t)rdev);
-
   if(NULL == (pcxt = fuse_get_context())){
-    FPRN("###End###");
+    DPRN("###End###");
     return -EIO;
   }
 
   if(0 != (result = create_file_object(path, mode, pcxt->uid, pcxt->gid))){
     DPRN("could not create object for special file(result=%d)", result);
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   StatCache::getStatCacheData()->DelStat(path);
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 
 static int ossfs_create(const char* path, mode_t mode, struct fuse_file_info* fi)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][mode=%04o][flags=%d]", path, mode, fi->flags);
   
   int result;
   headers_t meta;
   struct fuse_context* pcxt;
 
-  FPRN("[path=%s][mode=%04o][flags=%d]", path, mode, fi->flags);
-
   if(NULL == (pcxt = fuse_get_context())){
-    FPRN("###End###");
+    DPRN("###End###");
     return -EIO;
   }
 
   // check parent directory attribute.
   if(0 != (result = check_parent_object_access(path, X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   result = check_object_access(path, W_OK, NULL);
   if(-ENOENT == result){
     if(0 != (result = check_parent_object_access(path, W_OK))){
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
   }else if(0 != result){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   result = create_file_object(path, mode, pcxt->uid, pcxt->gid);
   StatCache::getStatCacheData()->DelStat(path);
   if(result != 0){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
   FdEntity* ent;
   if(NULL == (ent = FdManager::get()->Open(path, 0, -1, false, true))){
-    FPRN("###End###");
+    DPRN("###End###");
     return -EIO;
   }
   fi->fh = ent->GetFd();
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return 0;
 }
 
@@ -886,28 +880,26 @@ static int create_directory_object(const char* path, mode_t mode, time_t time, u
 
 static int ossfs_mkdir(const char* path, mode_t mode)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][mode=%04o]", path, mode);
     
   int result;
   struct fuse_context* pcxt;
 
-  FPRN("[path=%s][mode=%04o]", path, mode);
-
   if(NULL == (pcxt = fuse_get_context())){
-    FPRN("###End###");
+    DPRN("###End###");
     return -EIO;
   }
 
   // check parent directory attribute.
   if(0 != (result = check_parent_object_access(path, W_OK | X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   if(-ENOENT != (result = check_object_access(path, F_OK, NULL))){
     if(0 == result){
       result = -EEXIST;
     }
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -915,20 +907,18 @@ static int ossfs_mkdir(const char* path, mode_t mode)
   StatCache::getStatCacheData()->DelStat(path);
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 
 static int ossfs_unlink(const char* path)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s]", path);
   
   int result;
 
-  FPRN("[path=%s]", path);
-
   if(0 != (result = check_parent_object_access(path, W_OK | X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   S3fsCurl ossfscurl;
@@ -937,7 +927,7 @@ static int ossfs_unlink(const char* path)
   StatCache::getStatCacheData()->DelStat(path);
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 
@@ -958,21 +948,19 @@ static int directory_empty(const char* path)
 
 static int ossfs_rmdir(const char* path)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s]", path);
   int result;
   string strpath;
   struct stat stbuf;
 
-  FPRN("[path=%s]", path);
-
   if(0 != (result = check_parent_object_access(path, W_OK | X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
   // directory must be empty
   if(directory_empty(path) != 0){
-    FPRN("###End###");
+    DPRN("###End###");
     return -ENOTEMPTY;
   }
 
@@ -1012,32 +1000,30 @@ static int ossfs_rmdir(const char* path)
   }
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 
 static int ossfs_symlink(const char* from, const char* to)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [from=%s][to=%s]", from, to);
 
   int result;
   struct fuse_context* pcxt;
 
-  FPRN("[from=%s][to=%s]", from, to);
-
   if(NULL == (pcxt = fuse_get_context())){
-    FPRN("###End###");
+    DPRN("###End###");
     return -EIO;
   }
   if(0 != (result = check_parent_object_access(to, W_OK | X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   if(-ENOENT != (result = check_object_access(to, F_OK, NULL))){
     if(0 == result){
       result = -EEXIST;
     }
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -1052,7 +1038,7 @@ static int ossfs_symlink(const char* from, const char* to)
   FdEntity* ent;
   if(NULL == (ent = FdManager::get()->Open(to, 0, -1, true, true))){
     DPRN("could not open tmpfile(errno=%d)", errno);
-    FPRN("###End###");
+    DPRN("###End###");
     return -errno;
   }
   // write
@@ -1060,7 +1046,7 @@ static int ossfs_symlink(const char* from, const char* to)
   if(from_size != ent->Write(from, 0, from_size)){
     DPRN("could not write tmpfile(errno=%d)", errno);
     FdManager::get()->Close(ent);
-    FPRN("###End###");
+    DPRN("###End###");
     return -errno;
   }
   // upload
@@ -1072,7 +1058,7 @@ static int ossfs_symlink(const char* from, const char* to)
   StatCache::getStatCacheData()->DelStat(to);
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 
@@ -1345,25 +1331,23 @@ static int rename_directory(const char* from, const char* to)
 
 static int ossfs_rename(const char* from, const char* to)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [from=%s][to=%s]", from, to);
   
   struct stat buf;
   int result;
 
-  FPRN("[from=%s][to=%s]", from, to);
-
   if(0 != (result = check_parent_object_access(to, W_OK | X_OK))){
     // not permmit writing "to" object parent dir.
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   if(0 != (result = check_parent_object_access(from, W_OK | X_OK))){
     // not permmit removing "from" object parent dir.
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   if(0 != (result = get_object_attribute(from, &buf, NULL))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -1381,21 +1365,20 @@ static int ossfs_rename(const char* from, const char* to)
   }
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 
 static int ossfs_link(const char* from, const char* to)
 {
-  FPRN("###Begin###");
-  FPRN("[from=%s][to=%s]", from, to);
-  FPRN("###End###");
+  DPRN("###Begin### [from=%s][to=%s]", from, to);
+  DPRN("###End###");
   return -EPERM;
 }
 
 static int ossfs_chmod(const char* path, mode_t mode)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][mode=%04o]", path, mode);
   
   int result;
   string strpath;
@@ -1405,19 +1388,17 @@ static int ossfs_chmod(const char* path, mode_t mode)
   struct stat stbuf;
   int nDirType = DIRTYPE_UNKNOWN;
 
-  FPRN("[path=%s][mode=%04o]", path, mode);
-
   if(0 == strcmp(path, "/")){
-    DPRNNN("Could not change mode for maount point.");
-    FPRN("###End###");
+    DPRN("Could not change mode for mount point.");
+    DPRN("###End###");
     return -EIO;
   }
   if(0 != (result = check_parent_object_access(path, X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   if(0 != (result = check_object_owner(path, &stbuf))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -1429,7 +1410,7 @@ static int ossfs_chmod(const char* path, mode_t mode)
     result   = get_object_attribute(strpath.c_str(), NULL, &meta);
   }
   if(0 != result){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -1441,7 +1422,7 @@ static int ossfs_chmod(const char* path, mode_t mode)
     if(IS_RMTYPEDIR(nDirType)){
       S3fsCurl ossfscurl;
       if(0 != (result = ossfscurl.DeleteRequest(strpath.c_str()))){
-        FPRN("###End###");
+        DPRN("###End###");
         return result;
       }
     }
@@ -1449,7 +1430,7 @@ static int ossfs_chmod(const char* path, mode_t mode)
 
     // Make new directory object("dir/")
     if(0 != (result = create_directory_object(newpath.c_str(), mode, stbuf.st_mtime, stbuf.st_uid, stbuf.st_gid))){
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
   }else{
@@ -1459,20 +1440,20 @@ static int ossfs_chmod(const char* path, mode_t mode)
     meta["x-oss-metadata-directive"] = "REPLACE";
 
     if(put_headers(strpath.c_str(), meta, false) != 0){
-      FPRN("###End###");
+      DPRN("###End###");
       return -EIO;
     }
     StatCache::getStatCacheData()->DelStat(nowcache);
   }
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return 0;
 }
 
 static int ossfs_chmod_nocopy(const char* path, mode_t mode)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][mode=%04o]", path, mode);
   
   int result;
   string strpath;
@@ -1482,19 +1463,17 @@ static int ossfs_chmod_nocopy(const char* path, mode_t mode)
   struct stat stbuf;
   int nDirType = DIRTYPE_UNKNOWN;
 
-  FPRNN("[path=%s][mode=%04o]", path, mode);
-
   if(0 == strcmp(path, "/")){
-    DPRNNN("Could not change mode for maount point.");
-    FPRN("###End###");
+    DPRN("Could not change mode for mount point.");
+    DPRN("###End###");
     return -EIO;
   }
   if(0 != (result = check_parent_object_access(path, X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   if(0 != (result = check_object_owner(path, &stbuf))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -1507,7 +1486,7 @@ static int ossfs_chmod_nocopy(const char* path, mode_t mode)
     result   = get_object_attribute(strpath.c_str(), NULL, &meta);
   }
   if(0 != result){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -1519,7 +1498,7 @@ static int ossfs_chmod_nocopy(const char* path, mode_t mode)
     if(IS_RMTYPEDIR(nDirType)){
       S3fsCurl ossfscurl;
       if(0 != (result = ossfscurl.DeleteRequest(strpath.c_str()))){
-        FPRN("###End###");
+        DPRN("###End###");
         return result;
       }
     }
@@ -1527,7 +1506,7 @@ static int ossfs_chmod_nocopy(const char* path, mode_t mode)
 
     // Make new directory object("dir/")
     if(0 != (result = create_directory_object(newpath.c_str(), mode, stbuf.st_mtime, stbuf.st_uid, stbuf.st_gid))){
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
   }else{
@@ -1540,7 +1519,7 @@ static int ossfs_chmod_nocopy(const char* path, mode_t mode)
     FdEntity* ent;
     if(NULL == (ent = get_local_fent(strpath.c_str(), true))){
       DPRN("could not open and read file(%s)", strpath.c_str());
-      FPRN("###End###");
+      DPRN("###End###");
       return -EIO;
     }
 
@@ -1548,7 +1527,7 @@ static int ossfs_chmod_nocopy(const char* path, mode_t mode)
     if(0 != (result = ent->Flush(meta, false, true))){
       DPRN("could not upload file(%s): result=%d", strpath.c_str(), result);
       FdManager::get()->Close(ent);
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
     FdManager::get()->Close(ent);
@@ -1557,13 +1536,13 @@ static int ossfs_chmod_nocopy(const char* path, mode_t mode)
   }
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 
 static int ossfs_chown(const char* path, uid_t uid, gid_t gid)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][uid=%u][gid=%u]", path, (unsigned int)uid, (unsigned int)gid);
   
   int result;
   string strpath;
@@ -1573,19 +1552,17 @@ static int ossfs_chown(const char* path, uid_t uid, gid_t gid)
   struct stat stbuf;
   int nDirType = DIRTYPE_UNKNOWN;
 
-  FPRN("[path=%s][uid=%u][gid=%u]", path, (unsigned int)uid, (unsigned int)gid);
-
   if(0 == strcmp(path, "/")){
-    DPRNNN("Could not change owner for maount point.");
-    FPRN("###End###");
+    DPRN("Could not change owner for mount point.");
+    DPRN("###End###");
     return -EIO;
   }
   if(0 != (result = check_parent_object_access(path, X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   if(0 != (result = check_object_owner(path, &stbuf))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -1603,7 +1580,7 @@ static int ossfs_chown(const char* path, uid_t uid, gid_t gid)
     result   = get_object_attribute(strpath.c_str(), NULL, &meta);
   }
   if(0 != result){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -1624,7 +1601,7 @@ static int ossfs_chown(const char* path, uid_t uid, gid_t gid)
     if(IS_RMTYPEDIR(nDirType)){
       S3fsCurl ossfscurl;
       if(0 != (result = ossfscurl.DeleteRequest(strpath.c_str()))){
-        FPRN("###End###");
+        DPRN("###End###");
         return result;
       }
     }
@@ -1632,7 +1609,7 @@ static int ossfs_chown(const char* path, uid_t uid, gid_t gid)
 
     // Make new directory object("dir/")
     if(0 != (result = create_directory_object(newpath.c_str(), stbuf.st_mode, stbuf.st_mtime, uid, gid))){
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
   }else{
@@ -1642,20 +1619,20 @@ static int ossfs_chown(const char* path, uid_t uid, gid_t gid)
     meta["x-oss-metadata-directive"] = "REPLACE";
 
     if(put_headers(strpath.c_str(), meta, false) != 0){
-      FPRN("###End###");
+      DPRN("###End###");
       return -EIO;
     }
     StatCache::getStatCacheData()->DelStat(nowcache);
   }
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return 0;
 }
 
 static int ossfs_chown_nocopy(const char* path, uid_t uid, gid_t gid)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][uid=%u][gid=%u]", path, (unsigned int)uid, (unsigned int)gid);
   
   int result;
   string strpath;
@@ -1665,19 +1642,17 @@ static int ossfs_chown_nocopy(const char* path, uid_t uid, gid_t gid)
   struct stat stbuf;
   int nDirType = DIRTYPE_UNKNOWN;
 
-  FPRNN("[path=%s][uid=%u][gid=%u]", path, (unsigned int)uid, (unsigned int)gid);
-
   if(0 == strcmp(path, "/")){
-    DPRNNN("Could not change owner for maount point.");
-    FPRN("###End###");
+    DPRN("Could not change owner for mount point.");
+    DPRN("###End###");
     return -EIO;
   }
   if(0 != (result = check_parent_object_access(path, X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   if(0 != (result = check_object_owner(path, &stbuf))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -1690,7 +1665,7 @@ static int ossfs_chown_nocopy(const char* path, uid_t uid, gid_t gid)
     result   = get_object_attribute(strpath.c_str(), NULL, &meta);
   }
   if(0 != result){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -1711,7 +1686,7 @@ static int ossfs_chown_nocopy(const char* path, uid_t uid, gid_t gid)
     if(IS_RMTYPEDIR(nDirType)){
       S3fsCurl ossfscurl;
       if(0 != (result = ossfscurl.DeleteRequest(strpath.c_str()))){
-        FPRN("###End###");
+        DPRN("###End###");
         return result;
       }
     }
@@ -1719,7 +1694,7 @@ static int ossfs_chown_nocopy(const char* path, uid_t uid, gid_t gid)
 
     // Make new directory object("dir/")
     if(0 != (result = create_directory_object(newpath.c_str(), stbuf.st_mode, stbuf.st_mtime, uid, gid))){
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
   }else{
@@ -1733,7 +1708,7 @@ static int ossfs_chown_nocopy(const char* path, uid_t uid, gid_t gid)
     FdEntity* ent;
     if(NULL == (ent = get_local_fent(strpath.c_str(), true))){
       DPRN("could not open and read file(%s)", strpath.c_str());
-      FPRN("###End###");
+      DPRN("###End###");
       return -EIO;
     }
 
@@ -1741,7 +1716,7 @@ static int ossfs_chown_nocopy(const char* path, uid_t uid, gid_t gid)
     if(0 != (result = ent->Flush(meta, false, true))){
       DPRN("could not upload file(%s): result=%d", strpath.c_str(), result);
       FdManager::get()->Close(ent);
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
     FdManager::get()->Close(ent);
@@ -1750,13 +1725,13 @@ static int ossfs_chown_nocopy(const char* path, uid_t uid, gid_t gid)
   }
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 
 static int ossfs_utimens(const char* path, const struct timespec ts[2])
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][mtime=%jd]", path, (intmax_t)(ts[1].tv_sec));
   
   int result;
   string strpath;
@@ -1766,20 +1741,18 @@ static int ossfs_utimens(const char* path, const struct timespec ts[2])
   struct stat stbuf;
   int nDirType = DIRTYPE_UNKNOWN;
 
-  FPRN("[path=%s][mtime=%jd]", path, (intmax_t)(ts[1].tv_sec));
-
   if(0 == strcmp(path, "/")){
-    DPRNNN("Could not change mtime for maount point.");
-    FPRN("###End###");
+    DPRN("Could not change mtime for mount point.");
+    DPRN("###End###");
     return -EIO;
   }
   if(0 != (result = check_parent_object_access(path, X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   if(0 != (result = check_object_access(path, W_OK, &stbuf))){
     if(0 != check_object_owner(path, &stbuf)){
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
   }
@@ -1792,7 +1765,7 @@ static int ossfs_utimens(const char* path, const struct timespec ts[2])
     result   = get_object_attribute(strpath.c_str(), NULL, &meta);
   }
   if(0 != result){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -1804,7 +1777,7 @@ static int ossfs_utimens(const char* path, const struct timespec ts[2])
     if(IS_RMTYPEDIR(nDirType)){
       S3fsCurl ossfscurl;
       if(0 != (result = ossfscurl.DeleteRequest(strpath.c_str()))){
-        FPRN("###End###");
+        DPRN("###End###");
         return result;
       }
     }
@@ -1812,7 +1785,7 @@ static int ossfs_utimens(const char* path, const struct timespec ts[2])
 
     // Make new directory object("dir/")
     if(0 != (result = create_directory_object(newpath.c_str(), stbuf.st_mode, ts[1].tv_sec, stbuf.st_uid, stbuf.st_gid))){
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
   }else{
@@ -1821,20 +1794,20 @@ static int ossfs_utimens(const char* path, const struct timespec ts[2])
     meta["x-oss-metadata-directive"] = "REPLACE";
 
     if(put_headers(strpath.c_str(), meta, false) != 0){
-      FPRN("###End###");
+      DPRN("###End###");
       return -EIO;
     }
     StatCache::getStatCacheData()->DelStat(nowcache);
   }
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return 0;
 }
 
 static int ossfs_utimens_nocopy(const char* path, const struct timespec ts[2])
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][mtime=%s]", path, str(ts[1].tv_sec).c_str());
   
   int result;
   string strpath;
@@ -1844,20 +1817,18 @@ static int ossfs_utimens_nocopy(const char* path, const struct timespec ts[2])
   struct stat stbuf;
   int nDirType = DIRTYPE_UNKNOWN;
 
-  FPRNN("[path=%s][mtime=%s]", path, str(ts[1].tv_sec).c_str());
-
   if(0 == strcmp(path, "/")){
-    DPRNNN("Could not change mtime for maount point.");
-    FPRN("###End###");
+    DPRN("Could not change mtime for mount point.");
+    DPRN("###End###");
     return -EIO;
   }
   if(0 != (result = check_parent_object_access(path, X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   if(0 != (result = check_object_access(path, W_OK, &stbuf))){
     if(0 != check_object_owner(path, &stbuf)){
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
   }
@@ -1871,7 +1842,7 @@ static int ossfs_utimens_nocopy(const char* path, const struct timespec ts[2])
     result   = get_object_attribute(strpath.c_str(), NULL, &meta);
   }
   if(0 != result){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -1883,7 +1854,7 @@ static int ossfs_utimens_nocopy(const char* path, const struct timespec ts[2])
     if(IS_RMTYPEDIR(nDirType)){
       S3fsCurl ossfscurl;
       if(0 != (result = ossfscurl.DeleteRequest(strpath.c_str()))){
-        FPRN("###End###");
+        DPRN("###End###");
         return result;
       }
     }
@@ -1891,7 +1862,7 @@ static int ossfs_utimens_nocopy(const char* path, const struct timespec ts[2])
 
     // Make new directory object("dir/")
     if(0 != (result = create_directory_object(newpath.c_str(), stbuf.st_mode, ts[1].tv_sec, stbuf.st_uid, stbuf.st_gid))){
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
   }else{
@@ -1904,7 +1875,7 @@ static int ossfs_utimens_nocopy(const char* path, const struct timespec ts[2])
     FdEntity* ent;
     if(NULL == (ent = get_local_fent(strpath.c_str(), true))){
       DPRN("could not open and read file(%s)", strpath.c_str());
-      FPRN("###End###");
+      DPRN("###End###");
       return -EIO;
     }
 
@@ -1912,7 +1883,7 @@ static int ossfs_utimens_nocopy(const char* path, const struct timespec ts[2])
     if(0 != (result = ent->SetMtime(ts[1].tv_sec))){
       DPRN("could not set mtime to file(%s): result=%d", strpath.c_str(), result);
       FdManager::get()->Close(ent);
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
 
@@ -1920,7 +1891,7 @@ static int ossfs_utimens_nocopy(const char* path, const struct timespec ts[2])
     if(0 != (result = ent->Flush(meta, false, true))){
       DPRN("could not upload file(%s): result=%d", strpath.c_str(), result);
       FdManager::get()->Close(ent);
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
     FdManager::get()->Close(ent);
@@ -1929,26 +1900,24 @@ static int ossfs_utimens_nocopy(const char* path, const struct timespec ts[2])
   }
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 
 static int ossfs_truncate(const char* path, off_t size)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][size=%jd]", path, (intmax_t)size);
   
   int result;
   headers_t meta;
   FdEntity* ent = NULL;
 
-  FPRN("[path=%s][size=%jd]", path, (intmax_t)size);
-
   if(0 != (result = check_parent_object_access(path, X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   if(0 != (result = check_object_access(path, W_OK, NULL))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -1957,13 +1926,13 @@ static int ossfs_truncate(const char* path, off_t size)
     // Exists -> Get file(with size)
     if(NULL == (ent = FdManager::get()->Open(path, size, -1, false, true))){
       DPRN("could not open file(%s): errno=%d", path, errno);
-      FPRN("###End###");
+      DPRN("###End###");
       return -EIO;
     }
     if(0 != (result = ent->Load(0, size))){
       DPRN("could not download file(%s): result=%d", path, result);
       FdManager::get()->Close(ent);
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
 
@@ -1971,7 +1940,7 @@ static int ossfs_truncate(const char* path, off_t size)
     // Not found -> Make tmpfile(with size)
     if(NULL == (ent = FdManager::get()->Open(path, size, -1, true, true))){
       DPRN("could not open file(%s): errno=%d", path, errno);
-      FPRN("###End###");
+      DPRN("###End###");
       return -EIO;
     }
   }
@@ -1980,7 +1949,7 @@ static int ossfs_truncate(const char* path, off_t size)
   if(0 != (result = ent->Flush(meta, false, true))){
     DPRN("could not upload file(%s): result=%d", path, result);
     FdManager::get()->Close(ent);
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   FdManager::get()->Close(ent);
@@ -1988,19 +1957,17 @@ static int ossfs_truncate(const char* path, off_t size)
   StatCache::getStatCacheData()->DelStat(path);
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 
 static int ossfs_open(const char* path, struct fuse_file_info* fi)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][flags=%d]", path, fi->flags);
   
   int result;
   headers_t meta;
   struct stat st;
-
-  FPRN("[path=%s][flags=%d]", path, fi->flags);
 
   // clear stat for reading fresh stat.
   // (if object stat is changed, we refresh it. then ossfs gets always
@@ -2009,18 +1976,18 @@ static int ossfs_open(const char* path, struct fuse_file_info* fi)
 
   int mask = (O_RDONLY != (fi->flags & O_ACCMODE) ? W_OK : R_OK);
   if(0 != (result = check_parent_object_access(path, X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
   result = check_object_access(path, mask, &st);
   if(-ENOENT == result){
     if(0 != (result = check_parent_object_access(path, W_OK))){
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
   }else if(0 != result){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -2033,28 +2000,26 @@ static int ossfs_open(const char* path, struct fuse_file_info* fi)
 
   FdEntity* ent;
   if(NULL == (ent = FdManager::get()->Open(path, st.st_size, st.st_mtime, false, true))){
-    FPRN("###End###");
+    DPRN("###End###");
     return -EIO;
   }
   fi->fh = ent->GetFd();
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return 0;
 }
 
 static int ossfs_read(const char* path, char* buf, size_t size, off_t offset, struct fuse_file_info* fi)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][size=%zu][offset=%jd][fd=%llu]", path, size, (intmax_t)offset, (unsigned long long)(fi->fh));
   
   ssize_t res;
-
-  FPRNINFO("[path=%s][size=%zu][offset=%jd][fd=%llu]", path, size, (intmax_t)offset, (unsigned long long)(fi->fh));
 
   FdEntity* ent;
   if(NULL == (ent = FdManager::get()->ExistOpen(path))){
     DPRN("could not find opened fd(%s)", path);
-    FPRN("###End###");
+    DPRN("###End###");
     return -EIO;
   }
   if(ent->GetFd() != static_cast<int>(fi->fh)){
@@ -2066,7 +2031,7 @@ static int ossfs_read(const char* path, char* buf, size_t size, off_t offset, st
   if(!ent->GetSize(realsize) || 0 >= realsize){
     DPRNINFO("file size is 0, so break to read.");
     FdManager::get()->Close(ent);
-    FPRN("###End###");
+    DPRN("###End###");
     return 0;
   }
 
@@ -2075,22 +2040,20 @@ static int ossfs_read(const char* path, char* buf, size_t size, off_t offset, st
   }
   FdManager::get()->Close(ent);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return static_cast<int>(res);
 }
 
 static int ossfs_write(const char* path, const char* buf, size_t size, off_t offset, struct fuse_file_info* fi)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][size=%zu][offset=%jd][fd=%llu]", path, size, (intmax_t)offset, (unsigned long long)(fi->fh));
   
   ssize_t res;
-
-  FPRNINFO("[path=%s][size=%zu][offset=%jd][fd=%llu]", path, size, (intmax_t)offset, (unsigned long long)(fi->fh));
 
   FdEntity* ent;
   if(NULL == (ent = FdManager::get()->ExistOpen(path))){
     DPRN("could not find opened fd(%s)", path);
-    FPRN("###End###");
+    DPRN("###End###");
     return -EIO;
   }
   if(ent->GetFd() != static_cast<int>(fi->fh)){
@@ -2101,13 +2064,13 @@ static int ossfs_write(const char* path, const char* buf, size_t size, off_t off
   }
   FdManager::get()->Close(ent);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return static_cast<int>(res);
 }
 
 static int ossfs_statfs(const char* path, struct statvfs* stbuf)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s]", path);
   
   // 256T
   stbuf->f_bsize  = 0X1000000;
@@ -2116,31 +2079,29 @@ static int ossfs_statfs(const char* path, struct statvfs* stbuf)
   stbuf->f_bavail = 0x1000000;
   stbuf->f_namemax = NAME_MAX;
   
-  FPRN("###End###");
+  DPRN("###End###");
   return 0;
 }
 
 static int ossfs_flush(const char* path, struct fuse_file_info* fi)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][fd=%llu]", path, (unsigned long long)(fi->fh));
   
   int result;
 
-  FPRN("[path=%s][fd=%llu]", path, (unsigned long long)(fi->fh));
-
   int mask = (O_RDONLY != (fi->flags & O_ACCMODE) ? W_OK : R_OK);
   if(0 != (result = check_parent_object_access(path, X_OK))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
   result = check_object_access(path, mask, NULL);
   if(-ENOENT == result){
     if(0 != (result = check_parent_object_access(path, W_OK))){
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
   }else if(0 != result){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -2149,7 +2110,7 @@ static int ossfs_flush(const char* path, struct fuse_file_info* fi)
     headers_t meta;
     if(0 != (result = get_object_attribute(path, NULL, &meta))){
       FdManager::get()->Close(ent);
-      FPRN("###End###");
+      DPRN("###End###");
       return result;
     }
 
@@ -2165,14 +2126,13 @@ static int ossfs_flush(const char* path, struct fuse_file_info* fi)
   }
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 
 static int ossfs_release(const char* path, struct fuse_file_info* fi)
 {
-  FPRN("###Begin###");
-  FPRN("[path=%s][fd=%llu]", path, (unsigned long long)(fi->fh));
+  DPRN("###Begin### [path=%s][fd=%llu]", path, (unsigned long long)(fi->fh));
 
   // [NOTICE]
   // At first, we remove stats cache.
@@ -2187,7 +2147,7 @@ static int ossfs_release(const char* path, struct fuse_file_info* fi)
   FdEntity* ent;
   if(NULL == (ent = FdManager::get()->GetFdEntity(path))){
     DPRN("could not find fd(file=%s)", path);
-    FPRN("###End###");
+    DPRN("###End###");
     return -EIO;
   }
   if(ent->GetFd() != static_cast<int>(fi->fh)){
@@ -2203,25 +2163,23 @@ static int ossfs_release(const char* path, struct fuse_file_info* fi)
   }
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return 0;
 }
 
 static int ossfs_opendir(const char* path, struct fuse_file_info* fi)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s][flags=%d]", path, fi->flags);
     
   int result;
   int mask = (O_RDONLY != (fi->flags & O_ACCMODE) ? W_OK : R_OK) | X_OK;
-
-  FPRN("[path=%s][flags=%d]", path, fi->flags);
 
   if(0 == (result = check_object_access(path, mask, NULL))){
     result = check_parent_object_access(path, mask);
   }
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 
@@ -2343,23 +2301,21 @@ static int readdir_multi_head(const char* path, S3ObjList& head, void* buf, fuse
 
 static int ossfs_readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info* fi)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin### [path=%s]", path);
   
   S3ObjList head;
   s3obj_list_t headlist;
   int result;
 
-  FPRN("[path=%s]", path);
-
   if(0 != (result = check_object_access(path, X_OK, NULL))){
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
   // get a list of all the objects
   if((result = list_bucket(path, head, "/")) != 0){
     DPRN("list_bucket returns error(%d).", result);
-    FPRN("###End###");
+    DPRN("###End###");
     return result;
   }
 
@@ -2367,7 +2323,7 @@ static int ossfs_readdir(const char* path, void* buf, fuse_fill_dir_t filler, of
   filler(buf, ".", 0, 0);
   filler(buf, "..", 0, 0);
   if(head.IsEmpty()){
-    FPRN("###End###");
+    DPRN("###End###");
     return 0;
   }
 
@@ -2381,7 +2337,7 @@ static int ossfs_readdir(const char* path, void* buf, fuse_fill_dir_t filler, of
   }
   S3FS_MALLOCTRIM(0);
 
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 
@@ -2766,7 +2722,7 @@ static int remote_mountpath_exists(const char* path)
 
 static void* ossfs_init(struct fuse_conn_info* conn)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin###");
   
   LOWSYSLOGPRINT(LOG_ERR, "init $Rev: 497 $");
 
@@ -2774,7 +2730,7 @@ static void* ossfs_init(struct fuse_conn_info* conn)
   if(!S3fsCurl::InitS3fsCurl("/etc/mime.types")){
     fprintf(stderr, "%s: Could not initiate curl library.\n", program_name.c_str());
     LOWSYSLOGPRINT(LOG_ERR, "Could not initiate curl library.");
-    FPRN("###End###");
+    DPRN("###End###");
     exit(EXIT_FAILURE);
   }
 
@@ -2784,7 +2740,7 @@ static void* ossfs_init(struct fuse_conn_info* conn)
   if(!S3fsCurl::IsPublicBucket()){
     int result;
     if(EXIT_SUCCESS != (result = ossfs_check_service())){
-      FPRN("###End###");
+      DPRN("###End###");
       exit(result);
     }
   }
@@ -2797,13 +2753,13 @@ static void* ossfs_init(struct fuse_conn_info* conn)
   if(is_remove_cache && !FdManager::DeleteCacheDirectory()){
     DPRNINFO("Could not inilialize cache directory.");
   }
-  FPRN("###End###");
+  DPRN("###End###");
   return NULL;
 }
 
 static void ossfs_destroy(void*)
 {
-  FPRN("###Begin###");
+  DPRN("###Begin###");
 
   // Destory curl
   if(!S3fsCurl::DestroyS3fsCurl()){
@@ -2813,21 +2769,20 @@ static void ossfs_destroy(void*)
   if(is_remove_cache && !FdManager::DeleteCacheDirectory()){
     DPRN("Could not remove cache directory.");
   }
-  FPRN("###End###");
+  DPRN("###End###");
 }
 
 static int ossfs_access(const char* path, int mask)
 {
-  FPRN("###Begin###");
-  FPRN("[path=%s][mask=%s%s%s%s]", path,
-          ((mask & R_OK) == R_OK) ? "R_OK " : "",
-          ((mask & W_OK) == W_OK) ? "W_OK " : "",
-          ((mask & X_OK) == X_OK) ? "X_OK " : "",
-          (mask == F_OK) ? "F_OK" : "");
+  DPRN("###Begin### [path=%s][mask=%s%s%s%s]", path,
+       ((mask & R_OK) == R_OK) ? "R_OK " : "",
+       ((mask & W_OK) == W_OK) ? "W_OK " : "",
+       ((mask & X_OK) == X_OK) ? "X_OK " : "",
+       (mask == F_OK) ? "F_OK" : "");
 
   int result = check_object_access(path, mask, NULL);
   S3FS_MALLOCTRIM(0);
-  FPRN("###End###");
+  DPRN("###End###");
   return result;
 }
 

@@ -1,0 +1,7 @@
+{
+    "bucket_name" : "***",
+    "access_id" : "***",
+    "access_key" : "***",
+    "mount_dir" : "/mnt/***",
+    "region_url" : "http://***.aliyuncs.com"
+}

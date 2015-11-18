@@ -281,6 +281,7 @@ class S3fsCurl
     bool CreateCurlHandle(bool force = false);
     bool DestroyCurlHandle(void);
 
+    void PrintResponseLog(void);
     bool GetResponseCode(long& responseCode);
     int RequestPerform(void);
     int DeleteRequest(const char* tpath);
