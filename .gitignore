@@ -22,6 +22,7 @@
 /src/Makefile.in
 /src/ossfs
 /src/test_*
+/stamp-h1
 /test/.deps/
 /test/Makefile
 /test/Makefile.in
