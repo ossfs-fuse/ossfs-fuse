@@ -1,6 +1,8 @@
 #ifndef S3FS_COMMON_H_
 #define S3FS_COMMON_H_
 
+#include "../config.h"
+
 //
 // Macro
 //
