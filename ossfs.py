@@ -155,7 +155,7 @@ def stop():
         print u"检查目录失败，命令 df %s，输出：" % parameter_dict["mount_dir"]
         print output
         exit(1)
-    if mounted_flag is None:
+    if len(output.split()) != 13:
         print u"检查目录失败，命令 df %s，输出：" % parameter_dict["mount_dir"]
         print output
         exit(1)
