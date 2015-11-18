@@ -9,7 +9,7 @@ def configure():
 
     print u"现在准备编译环境"
 
-    status, output = getstatusoutput("./autogen")
+    status, output = getstatusoutput("./autogen.sh")
     if status != 0:
         print u"准备编译环境失败，输出："
         print output
