@@ -8,6 +8,13 @@ from commands import getoutput, getstatusoutput
 def configure():
 
     print u"现在准备编译环境"
+
+    status, output = getstatusoutput("./autogen.sh")
+    if status != 0:
+        print u"准备编译环境失败，输出："
+        print output
+        exit(1)
+    
     status, output = getstatusoutput("./configure")
     if status != 0:
         print u"准备编译环境失败，输出："
@@ -142,11 +149,27 @@ def stop():
         print output
         exit(1)
 
-    status, output = getstatusoutput("umount %s" % parameter_dict["mount_dir"])
+    mounted_flag = None # whether mount_dir has been mounted
+    status, output = getstatusoutput("df %s" % parameter_dict["mount_dir"])
     if status != 0:
-        print u"卸载失败，输出："
+        print u"检查目录失败，命令 df %s，输出：" % parameter_dict["mount_dir"]
         print output
         exit(1)
+    if len(output.split()) != 13:
+        print u"检查目录失败，命令 df %s，输出：" % parameter_dict["mount_dir"]
+        print output
+        exit(1)
+    if output.split()[7] == "ossfs":
+        mounted_flag = True # mounted, need to be umount
+    else:
+        mounted_flag = False # already umounted, needn't to be umount
+
+    if mounted_flag is True:
+        status, output = getstatusoutput("umount %s" % parameter_dict["mount_dir"])
+        if status != 0:
+            print u"卸载失败，输出："
+            print output
+            exit(1)
 
     print "停止并卸载成功"
 

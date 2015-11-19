@@ -3995,15 +3995,10 @@ int main(int argc, char* argv[])
   ossfs_oper.access    = ossfs_access;
   ossfs_oper.create    = ossfs_create;
 
-  // init NSS
-  S3FS_INIT_NSS();
-
   // now passing things off to fuse, fuse will finish evaluating the command line args
   fuse_res = fuse_main(custom_args.argc, custom_args.argv, &ossfs_oper, NULL);
   fuse_opt_free_args(&custom_args);
 
-  // cleanup NSS
-  S3FS_CLEANUP_NSS();
   // cleanup xml2
   xmlCleanupParser();
   S3FS_MALLOCTRIM(0);
