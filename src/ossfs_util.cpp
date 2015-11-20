@@ -61,16 +61,16 @@ string get_realpath(const char *path) {
 }
 
 //-------------------------------------------------------------------
-// Class S3ObjList
+// Class OssObjList
 //-------------------------------------------------------------------
-// New class S3ObjList is base on old s3_object struct.
-// This class is for S3 compatible clients.
+// New class OssObjList is base on old s3_object struct.
+// This class is for OSS compatible clients.
 //
 // If name is terminated by "/", it is forced dir type.
 // If name is terminated by "_$folder$", it is forced dir type.
 // If is_dir is true and name is not terminated by "/", the name is added "/".
 //
-bool S3ObjList::insert(const char* name, const char* etag, bool is_dir)
+bool OssObjList::insert(const char* name, const char* etag, bool is_dir)
 {
   if(!name || '\0' == name[0]){
     return false;
@@ -138,7 +138,7 @@ bool S3ObjList::insert(const char* name, const char* etag, bool is_dir)
   return insert_nomalized(orgname.c_str(), newname.c_str(), is_dir);
 }
 
-bool S3ObjList::insert_nomalized(const char* name, const char* normalized, bool is_dir)
+bool OssObjList::insert_nomalized(const char* name, const char* normalized, bool is_dir)
 {
   if(!name || '\0' == name[0] || !normalized || '\0' == normalized[0]){
     return false;
@@ -164,7 +164,7 @@ bool S3ObjList::insert_nomalized(const char* name, const char* normalized, bool 
   return true;
 }
 
-const s3obj_entry* S3ObjList::GetS3Obj(const char* name) const
+const s3obj_entry* OssObjList::GetOssObj(const char* name) const
 {
   s3obj_t::const_iterator iter;
 
@@ -177,27 +177,27 @@ const s3obj_entry* S3ObjList::GetS3Obj(const char* name) const
   return &((*iter).second);
 }
 
-string S3ObjList::GetOrgName(const char* name) const
+string OssObjList::GetOrgName(const char* name) const
 {
   const s3obj_entry* ps3obj;
 
   if(!name || '\0' == name[0]){
     return string("");
   }
-  if(NULL == (ps3obj = GetS3Obj(name))){
+  if(NULL == (ps3obj = GetOssObj(name))){
     return string("");
   }
   return ps3obj->orgname;
 }
 
-string S3ObjList::GetNormalizedName(const char* name) const
+string OssObjList::GetNormalizedName(const char* name) const
 {
   const s3obj_entry* ps3obj;
 
   if(!name || '\0' == name[0]){
     return string("");
   }
-  if(NULL == (ps3obj = GetS3Obj(name))){
+  if(NULL == (ps3obj = GetOssObj(name))){
     return string("");
   }
   if(0 == (ps3obj->normalname).length()){
@@ -206,30 +206,30 @@ string S3ObjList::GetNormalizedName(const char* name) const
   return ps3obj->normalname;
 }
 
-string S3ObjList::GetETag(const char* name) const
+string OssObjList::GetETag(const char* name) const
 {
   const s3obj_entry* ps3obj;
 
   if(!name || '\0' == name[0]){
     return string("");
   }
-  if(NULL == (ps3obj = GetS3Obj(name))){
+  if(NULL == (ps3obj = GetOssObj(name))){
     return string("");
   }
   return ps3obj->etag;
 }
 
-bool S3ObjList::IsDir(const char* name) const
+bool OssObjList::IsDir(const char* name) const
 {
   const s3obj_entry* ps3obj;
 
-  if(NULL == (ps3obj = GetS3Obj(name))){
+  if(NULL == (ps3obj = GetOssObj(name))){
     return false;
   }
   return ps3obj->is_dir;
 }
 
-bool S3ObjList::GetNameList(s3obj_list_t& list, bool OnlyNormalized, bool CutSlash) const
+bool OssObjList::GetNameList(s3obj_list_t& list, bool OnlyNormalized, bool CutSlash) const
 {
   s3obj_t::const_iterator iter;
 
@@ -249,7 +249,7 @@ bool S3ObjList::GetNameList(s3obj_list_t& list, bool OnlyNormalized, bool CutSla
 
 typedef std::map<std::string, bool> s3obj_h_t;
 
-bool S3ObjList::MakeHierarchizedList(s3obj_list_t& list, bool haveSlash)
+bool OssObjList::MakeHierarchizedList(s3obj_list_t& list, bool haveSlash)
 {
   s3obj_h_t h_map;
   s3obj_h_t::iterator hiter;
@@ -301,14 +301,14 @@ MVNODE *create_mvnode(const char *old_path, const char *new_path, bool is_dir, b
   p = (MVNODE *) malloc(sizeof(MVNODE));
   if (p == NULL) {
     printf("create_mvnode: could not allocation memory for p\n");
-    S3FS_FUSE_EXIT();
+    OSSFS_FUSE_EXIT();
     return NULL;
   }
 
   if(NULL == (p_old_path = strdup(old_path))){
     free(p);
     printf("create_mvnode: could not allocation memory for p_old_path\n");
-    S3FS_FUSE_EXIT();
+    OSSFS_FUSE_EXIT();
     return NULL;
   }
 
@@ -316,7 +316,7 @@ MVNODE *create_mvnode(const char *old_path, const char *new_path, bool is_dir, b
     free(p);
     free(p_old_path);
     printf("create_mvnode: could not allocation memory for p_new_path\n");
-    S3FS_FUSE_EXIT();
+    OSSFS_FUSE_EXIT();
     return NULL;
   }
 
@@ -659,7 +659,7 @@ mode_t get_mode(const char *s)
 mode_t get_mode(headers_t& meta, const char* path, bool checkdir, bool forcedir)
 {
   mode_t mode = 0;
-  bool isS3sync = false;
+  bool isOSSsync = false;
   headers_t::const_iterator iter;
 
   if(meta.end() != (iter = meta.find("x-oss-meta-mode"))){
@@ -667,14 +667,14 @@ mode_t get_mode(headers_t& meta, const char* path, bool checkdir, bool forcedir)
   }else{
     if(meta.end() != (iter = meta.find("x-oss-meta-permissions"))){ // for s3sync
       mode = get_mode((*iter).second.c_str());
-      isS3sync = true;
+      isOSSsync = true;
     }
   }
   // Checking the bitmask, if the last 3 bits are all zero then process as a regular
   // file type (S_IFDIR or S_IFREG), otherwise return mode unmodified so that S_IFIFO, 
   // S_IFSOCK, S_IFCHR, S_IFLNK and S_IFBLK devices can be processed properly by fuse.
   if(!(mode & S_IFMT)){ 
-    if(!isS3sync){
+    if(!isOSSsync){
       if(checkdir){
         if(forcedir){
           mode |= S_IFDIR;
@@ -879,7 +879,7 @@ void show_help (void)
     "      -----------\n"
     "      .gz      Content-Encoding     gzip\n"
     "      .Z       Content-Encoding     compress\n"
-    "               X-S3FS-MYHTTPHEAD    myvalue\n"
+    "               X-OSSFS-MYHTTPHEAD    myvalue\n"
     "      -----------\n"
     "      A sample configuration file is uploaded in \"test\" directory.\n"
     "      If you specify this option for set \"Content-Encoding\" HTTP \n"
@@ -955,14 +955,14 @@ void show_help (void)
     "        xmlns automatically after v1.66.\n"
     "\n"
     "   nocopyapi (for other incomplete compatibility object storage)\n"
-    "        For a distributed object storage which is compatibility S3\n"
+    "        For a distributed object storage which is compatibility OSS\n"
     "        API without PUT(copy api).\n"
     "        If you set this option, ossfs do not use PUT with \n"
     "        \"x-oss-copy-source\"(copy api). Because traffic is increased\n"
     "        2-3 times by this option, we do not recommend this.\n"
     "\n"
     "   norenameapi (for other incomplete compatibility object storage)\n"
-    "        For a distributed object storage which is compatibility S3\n"
+    "        For a distributed object storage which is compatibility OSS\n"
     "        API without PUT(copy api).\n"
     "        This option is a subset of nocopyapi option. The nocopyapi\n"
     "        option does not use copy-api for all command(ex. chmod, chown,\n"

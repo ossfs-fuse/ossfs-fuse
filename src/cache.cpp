@@ -120,7 +120,7 @@ void StatCache::Clear(void)
       delete (*iter).second;
     }
   }
-  S3FS_MALLOCTRIM(0);
+  OSSFS_MALLOCTRIM(0);
 
   pthread_mutex_unlock(&StatCache::stat_cache_lock);
 }
@@ -360,7 +360,7 @@ bool StatCache::TruncateCache(void)
       delete (*iter_to_delete).second;
     }
     stat_cache.erase(iter_to_delete);
-    S3FS_MALLOCTRIM(0);
+    OSSFS_MALLOCTRIM(0);
   }
 
   pthread_mutex_unlock(&StatCache::stat_cache_lock);
@@ -400,7 +400,7 @@ bool StatCache::DelStat(const char* key)
       stat_cache.erase(iter);
     }
   }
-  S3FS_MALLOCTRIM(0);
+  OSSFS_MALLOCTRIM(0);
 
   pthread_mutex_unlock(&StatCache::stat_cache_lock);
 

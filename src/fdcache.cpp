@@ -408,7 +408,7 @@ bool PageList::Serialize(CacheFileStat& file, bool is_output)
     char* ptmp;
     if(NULL == (ptmp = (char*)calloc(st.st_size + 1, sizeof(char)))){
       DPRNCRIT("could not allocate memory.");
-      S3FS_FUSE_EXIT();
+      OSSFS_FUSE_EXIT();
       return false;
     }
     // read from file
@@ -803,16 +803,16 @@ int FdEntity::Load(off_t start, off_t size)
         // parallel request
         // Additional time is needed for large files
         time_t backup = 0;
-        if(120 > S3fsCurl::GetReadwriteTimeout()){
-          backup = S3fsCurl::SetReadwriteTimeout(120);
+        if(120 > OssfsCurl::GetReadwriteTimeout()){
+          backup = OssfsCurl::SetReadwriteTimeout(120);
         }
-        result = S3fsCurl::ParallelGetObjectRequest(path.c_str(), fd, (*iter)->offset, (*iter)->bytes);
+        result = OssfsCurl::ParallelGetObjectRequest(path.c_str(), fd, (*iter)->offset, (*iter)->bytes);
         if(0 != backup){
-          S3fsCurl::SetReadwriteTimeout(backup);
+          OssfsCurl::SetReadwriteTimeout(backup);
         }
       }else{
         // single request
-        S3fsCurl ossfscurl;
+        OssfsCurl ossfscurl;
         result = ossfscurl.GetObjectRequest(path.c_str(), fd, (*iter)->offset, (*iter)->bytes);
       }
       if(0 != result){
@@ -902,15 +902,15 @@ int FdEntity::RowFlush(const char* tpath, headers_t& meta, bool ow_sse_flg, bool
   if(pagelist.Size() >= MULTIPART_LOWLIMIT && !nomultipart){ // 20MB
     // Additional time is needed for large files
     time_t backup = 0;
-    if(120 > S3fsCurl::GetReadwriteTimeout()){
-      backup = S3fsCurl::SetReadwriteTimeout(120);
+    if(120 > OssfsCurl::GetReadwriteTimeout()){
+      backup = OssfsCurl::SetReadwriteTimeout(120);
     }
-    result = S3fsCurl::ParallelMultipartUploadRequest(tpath ? tpath : path.c_str(), meta, fd, ow_sse_flg);
+    result = OssfsCurl::ParallelMultipartUploadRequest(tpath ? tpath : path.c_str(), meta, fd, ow_sse_flg);
     if(0 != backup){
-      S3fsCurl::SetReadwriteTimeout(backup);
+      OssfsCurl::SetReadwriteTimeout(backup);
     }
   }else{
-    S3fsCurl ossfscurl(true);
+    OssfsCurl ossfscurl(true);
     result = ossfscurl.PutRequest(tpath ? tpath : path.c_str(), meta, fd, ow_sse_flg);
   }
 

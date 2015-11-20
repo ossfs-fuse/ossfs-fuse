@@ -2,14 +2,14 @@
 
 #
 # By default tests run against a local s3proxy instance.  To run against 
-# Amazon S3, specify the following variables:
+# Aliyun OSS, specify the following variables:
 #
-# S3FS_CREDENTIALS_FILE=keyfile      s3fs format key file
+# OSSFS_CREDENTIALS_FILE=keyfile      s3fs format key file
 # TEST_BUCKET_1=bucket               Name of bucket to use 
 #
 # Example: 
 #
-# S3FS_CREDENTIALS_FILE=keyfile TEST_BUCKET_1=bucket ./small-integration-test.sh
+# OSSFS_CREDENTIALS_FILE=keyfile TEST_BUCKET_1=bucket ./small-integration-test.sh
 #
 
 set -o xtrace
@@ -46,8 +46,8 @@ then
 	mkdir -p $TEST_BUCKET_MOUNT_POINT_1
 fi
 
-stdbuf -oL -eL $S3FS $TEST_BUCKET_1 $TEST_BUCKET_MOUNT_POINT_1 \
-    -o passwd_file=$S3FS_CREDENTIALS_FILE
+stdbuf -oL -eL $OSSFS $TEST_BUCKET_1 $TEST_BUCKET_MOUNT_POINT_1 \
+    -o passwd_file=$OSSFS_CREDENTIALS_FILE
 
 retry 30 grep $TEST_BUCKET_MOUNT_POINT_1 /proc/mounts || exit 1
 

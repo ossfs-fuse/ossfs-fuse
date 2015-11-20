@@ -1,5 +1,5 @@
-#ifndef S3FS_S3FS_UTIL_H_
-#define S3FS_S3FS_UTIL_H_
+#ifndef OSSFS_OSSFS_UTIL_H_
+#define OSSFS_OSSFS_UTIL_H_
 
 //-------------------------------------------------------------------
 // Typedef
@@ -22,14 +22,14 @@ typedef std::list<std::string> s3obj_list_t;
 //
 // Class
 //
-class S3ObjList
+class OssObjList
 {
   private:
     s3obj_t objects;
 
   private:
     bool insert_nomalized(const char* name, const char* normalized, bool is_dir);
-    const s3obj_entry* GetS3Obj(const char* name) const;
+    const s3obj_entry* GetOssObj(const char* name) const;
 
     s3obj_t::const_iterator begin(void) const {
       return objects.begin();
@@ -39,8 +39,8 @@ class S3ObjList
     }
 
   public:
-    S3ObjList() {}
-    ~S3ObjList() {}
+    OssObjList() {}
+    ~OssObjList() {}
 
     bool IsEmpty(void) const {
       return objects.empty();
@@ -115,4 +115,4 @@ void show_usage(void);
 void show_help(void);
 void show_version(void);
 
-#endif // S3FS_S3FS_UTIL_H_
+#endif // OSSFS_OSSFS_UTIL_H_

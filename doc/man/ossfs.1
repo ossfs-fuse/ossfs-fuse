@@ -1,6 +1,6 @@
-.TH S3FS "1" "February 2011" "S3FS" "User Commands"
+.TH OSSFS "1" "February 2011" "OSSFS" "User Commands"
 .SH NAME
-S3FS \- FUSE-based file system backed by Amazon S3
+OSSFS-Fuse \- FUSE-based file system backed by Aliyun OSS
 .SH SYNOPSIS
 .SS mounting
 .TP
@@ -12,7 +12,7 @@ S3FS \- FUSE-based file system backed by Amazon S3
 .TP
 \fBossfs \-u bucket
 .SH DESCRIPTION
-ossfs is a FUSE filesystem that allows you to mount an Amazon S3 bucket as a local filesystem. It stores files natively and transparently in S3 (i.e., you can use other programs to access the same files).
+ossfs is a FUSE filesystem that allows you to mount an Aliyun OSS bucket as a local filesystem. It stores files natively and transparently in OSS (i.e., you can use other programs to access the same files).
 .SH AUTHENTICATION
 The ossfs password file has this format (use this format if you have only one set of credentials):
 .RS 4
@@ -49,15 +49,15 @@ All ossfs options must given in the form where "opt" is:
  <option_name>=<option_value>
 .TP
 \fB\-o\fR default_acl (default="private")
-the default canned acl to apply to all written S3 objects, e.g., "public-read".
+the default canned acl to apply to all written OSS objects, e.g., "public-read".
 Any created files will have this canned acl.
 Any updated files will also have this canned acl applied!
 .TP
 \fB\-o\fR prefix (default="") (coming soon!)
-a prefix to append to all S3 objects.
+a prefix to append to all OSS objects.
 .TP
 \fB\-o\fR retries (default="3")
-number of times to retry a failed S3 transaction.
+number of times to retry a failed OSS transaction.
 .TP
 \fB\-o\fR use_cache (default="" which means disabled)
 local folder to use for local file cache.
@@ -66,12 +66,12 @@ local folder to use for local file cache.
 delete local file cache when ossfs starts and exits.
 .TP
 \fB\-o\fR use_rrs (default is disable)
-use Amazon's Reduced Redundancy Storage.
+use Aliyun's Reduced Redundancy Storage.
 this option can not be specified with use_sse.
 (can specify use_rrs=1 for old version)
 .TP
 \fB\-o\fR use_sse (default is disable)
-use Amazon's Server Site Encryption.
+use Aliyun's Server Site Encryption.
 this option can not be specified with use_rrs.
 (can specify use_sse=1 for old version)
 .TP
@@ -91,7 +91,7 @@ This option specifies the configuration file path which file is the additional H
  -----------
  .gz      Content-Encoding     gzip
  .Z       Content-Encoding     compress
-          X-S3FS-MYHTTPHEAD    myvalue
+          X-OSSFS-MYHTTPHEAD    myvalue
  -----------
  A sample configuration file is uploaded in "test" directory.
 If you specify this option for set "Content-Encoding" HTTP header, please take care for RFC 2616.
@@ -138,7 +138,7 @@ For delayed reading and writing by ossfs, ossfs manages pages which is separated
 This option should not be changed when you don't have a trouble with performance.
 .TP
 \fB\-o\fR url (default="http://s3.amazonaws.com")
-sets the url to use to access Amazon S3. If you want to use HTTPS, then you can set url=https://s3.amazonaws.com
+sets the url to use to access Aliyun OSS. If you want to use HTTPS, then you can set url=https://s3.amazonaws.com
 .TP
 \fB\-o\fR nomultipart - disable multipart uploads
 .TP
@@ -156,11 +156,11 @@ disable registing xml name space for response of ListBucketResult and ListVersio
 This option should not be specified now, because ossfs looks up xmlns automatically after v1.66.
 .TP
 \fB\-o\fR nocopyapi - for other incomplete compatibility object storage.
-For a distributed object storage which is compatibility S3 API without PUT(copy api).
+For a distributed object storage which is compatibility OSS API without PUT(copy api).
 If you set this option, ossfs do not use PUT with "x-amz-copy-source"(copy api). Because traffic is increased 2-3 times by this option, we do not recommend this.
 .TP
 \fB\-o\fR norenameapi - for other incomplete compatibility object storage.
-For a distributed object storage which is compatibility S3 API without PUT(copy api).
+For a distributed object storage which is compatibility OSS API without PUT(copy api).
 This option is a subset of nocopyapi option. The nocopyapi option does not use copy-api for all command(ex. chmod, chown, touch, mv, etc), but this option does not use copy-api for only rename command(ex. mv).
 If this option is specified with nocopapi, the ossfs ignores it.
 .SH FUSE/MOUNT OPTIONS
@@ -170,16 +170,16 @@ Most of the generic mount options described in 'man mount' are supported (ro, rw
 There are many FUSE specific mount options that can be specified. e.g. allow_other. See the FUSE README.md for the full set.
 .SH NOTES
 .TP
-Maximum file size=64GB (limited by ossfs, not Amazon).
+Maximum file size=64GB (limited by ossfs, not Aliyun).
 .TP
-If enabled via the "use_cache" option, ossfs automatically maintains a local cache of files in the folder specified by use_cache. Whenever ossfs needs to read or write a file on S3, it first downloads the entire file locally to the folder specified by use_cache and operates on it. When fuse_release() is called, ossfs will re-upload the file to S3 if it has been changed. ossfs uses md5 checksums to minimize downloads from S3.
+If enabled via the "use_cache" option, ossfs automatically maintains a local cache of files in the folder specified by use_cache. Whenever ossfs needs to read or write a file on OSS, it first downloads the entire file locally to the folder specified by use_cache and operates on it. When fuse_release() is called, ossfs will re-upload the file to OSS if it has been changed. ossfs uses md5 checksums to minimize downloads from OSS.
 .TP
 The folder specified by use_cache is just a local cache. It can be deleted at any time. ossfs rebuilds it on demand.
 .TP
 Local file caching works by calculating and comparing md5 checksums (ETag HTTP header).
 .TP
-ossfs leverages /etc/mime.types to "guess" the "correct" content-type based on file name extension. This means that you can copy a website to S3 and serve it up directly from S3 with correct content-types!
+ossfs leverages /etc/mime.types to "guess" the "correct" content-type based on file name extension. This means that you can copy a website to OSS and serve it up directly from OSS with correct content-types!
 .SH BUGS
-Due to S3's "eventual consistency" limitations, file creation can and will occasionally fail. Even after a successful create, subsequent reads can fail for an indeterminate time, even after one or more successful reads. Create and read enough files and you will eventually encounter this failure. This is not a flaw in ossfs and it is not something a FUSE wrapper like ossfs can work around. The retries option does not address this issue. Your application must either tolerate or compensate for these failures, for example by retrying creates or reads.
+Due to OSS's "eventual consistency" limitations, file creation can and will occasionally fail. Even after a successful create, subsequent reads can fail for an indeterminate time, even after one or more successful reads. Create and read enough files and you will eventually encounter this failure. This is not a flaw in ossfs and it is not something a FUSE wrapper like ossfs can work around. The retries option does not address this issue. Your application must either tolerate or compensate for these failures, for example by retrying creates or reads.
 .SH AUTHOR
 ossfs has been written by Randy Rizun <rrizun@gmail.com>.

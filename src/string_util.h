@@ -1,5 +1,5 @@
-#ifndef S3FS_STRING_UTIL_H_
-#define S3FS_STRING_UTIL_H_
+#ifndef OSSFS_STRING_UTIL_H_
+#define OSSFS_STRING_UTIL_H_
 
 /*
  * A collection of string utilities for manipulating URLs and HTTP responses.
@@ -32,4 +32,4 @@ std::string urlEncode(const std::string &s);
 std::string prepare_url(const char* url);
 bool get_keyword_value(std::string& target, const char* keyword, std::string& value);
 
-#endif // S3FS_STRING_UTIL_H_
+#endif // OSSFS_STRING_UTIL_H_
