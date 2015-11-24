@@ -1,14 +1,16 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
+from re import search
 from json import load
 from argparse import ArgumentParser
 from commands import getoutput, getstatusoutput
 
+lsb_release = None
+
 def configure():
 
     print u"现在准备编译环境"
-
     status, output = getstatusoutput("./autogen.sh")
     if status != 0:
         print u"准备编译环境失败，输出："
@@ -184,6 +186,39 @@ def main():
     parser.add_argument("command", help=u"ossfs 命令，可选项包括 start | stop | restart")
     
     args = parser.parse_args()
+
+    # check release version
+    status, output = getstatusoutput("lsb_release -a")
+    if status != 0:
+        print u"Linux发行版检查失败，输出："
+        print output
+        exit(1)
+    lsb_release = None
+    for i in range(0, len(output.split("\n"))):
+        if search( "Description:", output.split("\n")[i]) is not None:
+            lsb_release = output.split("\n")[i].strip()
+            break
+    if lsb_release is None:
+        print u"Linux发行版检查失败，命令 lsb_release -a，输出："
+        print output
+        exit(1)
+    if search("Ubuntu 14.04 LTS", lsb_release) is not None:
+        lsb_release = "Ubuntu"
+    elif search("CentOS Linux release 7", lsb_release) is not None:
+        lsb_release = "CentOS"
+    else:
+        print u"Linux发行版检查失败，发行版必须是 Ubuntu 14.04 或者 CentOS 7，您当前的发行版是：", lsb_release
+        exit(1)
+
+    # check user
+    status, output = getstatusoutput("echo ${USER}")
+    if status != 0:
+        print u"用户权限检查失败，输出："
+        print output
+        print exit(1)
+    if output != "root":
+        print u"用户必须具有root权限，您当前的用户是：%s", output
+        print exit(1)
 
     # check command
     if args.command not in ["start", "stop", "restart"]:

@@ -17,7 +17,7 @@ BIG_FILE=big-file-ossfs.txt
 BIG_FILE_LENGTH=$((25 * 1024 * 1024))
 
 ########################
-# S3FS-Fuse Test Cases #
+# OSSFS-Fuse Test Cases #
 ########################
 
 function mk_test_file {
@@ -561,7 +561,7 @@ function run_all_tests {
     # TODO: broken: https://github.com/s3fs-fuse/s3fs-fuse/issues/145
     #test_rename_before_close
     test_multipart_upload
-    # TODO: test disabled until S3Proxy 1.5.0 is released
+    # TODO: test disabled until OSSProxy 1.5.0 is released
     #test_multipart_copy
     test_dir_with_special_characters
     test_file_with_special_characters

@@ -1,5 +1,5 @@
-#ifndef S3FS_CURL_H_
-#define S3FS_CURL_H_
+#ifndef OSSFS_CURL_H_
+#define OSSFS_CURL_H_
 
 //----------------------------------------------
 // class BodyData
@@ -94,10 +94,10 @@ typedef std::pair<double, double>   progress_t;
 typedef std::map<CURL*, time_t>     curltime_t;
 typedef std::map<CURL*, progress_t> curlprogress_t;
 
-class S3fsMultiCurl;
+class OssfsMultiCurl;
 
 //----------------------------------------------
-// class S3fsCurl
+// class OssfsCurl
 //----------------------------------------------
 typedef std::map<std::string, std::string> iamcredmap_t;
 
@@ -114,9 +114,9 @@ struct CRYPTO_dynlock_value
 
 // Class for lapping curl
 //
-class S3fsCurl
+class OssfsCurl
 {
-    friend class S3fsMultiCurl;  
+    friend class OssfsMultiCurl;  
 
   private:
     enum REQTYPE {
@@ -192,8 +192,8 @@ class S3fsCurl
 
   public:
     // constructor/destructor
-    S3fsCurl(bool ahbe = false);
-    ~S3fsCurl();
+    OssfsCurl(bool ahbe = false);
+    ~OssfsCurl();
 
   private:
     // class methods
@@ -220,9 +220,9 @@ class S3fsCurl
     static size_t UploadReadCallback(void *ptr, size_t size, size_t nmemb, void *userp);
     static size_t DownloadWriteCallback(void* ptr, size_t size, size_t nmemb, void* userp);
 
-    static bool UploadMultipartPostCallback(S3fsCurl* ossfscurl);
-    static S3fsCurl* UploadMultipartPostRetryCallback(S3fsCurl* ossfscurl);
-    static S3fsCurl* ParallelGetObjectRetryCallback(S3fsCurl* ossfscurl);
+    static bool UploadMultipartPostCallback(OssfsCurl* ossfscurl);
+    static OssfsCurl* UploadMultipartPostRetryCallback(OssfsCurl* ossfscurl);
+    static OssfsCurl* ParallelGetObjectRetryCallback(OssfsCurl* ossfscurl);
 
     static bool ParseIAMCredentialResponse(const char* response, iamcredmap_t& keyval);
     static bool SetIAMCredentials(const char* response);
@@ -243,8 +243,8 @@ class S3fsCurl
 
   public:
     // class methods
-    static bool InitS3fsCurl(const char* MimeFile = NULL);
-    static bool DestroyS3fsCurl(void);
+    static bool InitOssfsCurl(const char* MimeFile = NULL);
+    static bool DestroyOssfsCurl(void);
     static int ParallelMultipartUploadRequest(const char* tpath, headers_t& meta, int fd, bool ow_sse_flg);
     static int ParallelGetObjectRequest(const char* tpath, int fd, off_t start, ssize_t size);
     static bool CheckIAMCredentialUpdate(void);
@@ -255,27 +255,27 @@ class S3fsCurl
     static bool SetSslSessionCache(bool isCache);
     static long SetConnectTimeout(long timeout);
     static time_t SetReadwriteTimeout(time_t timeout);
-    static time_t GetReadwriteTimeout(void) { return S3fsCurl::readwrite_timeout; }
+    static time_t GetReadwriteTimeout(void) { return OssfsCurl::readwrite_timeout; }
     static int SetRetries(int count);
     static bool SetPublicBucket(bool flag);
-    static bool IsPublicBucket(void) { return S3fsCurl::is_public_bucket; }
+    static bool IsPublicBucket(void) { return OssfsCurl::is_public_bucket; }
     static std::string SetDefaultAcl(const char* acl);
     static bool SetUseRrs(bool flag);
-    static bool GetUseRrs(void) { return S3fsCurl::is_use_rrs; }
+    static bool GetUseRrs(void) { return OssfsCurl::is_use_rrs; }
     static bool SetUseSse(bool flag);
-    static bool GetUseSse(void) { return S3fsCurl::is_use_sse; }
+    static bool GetUseSse(void) { return OssfsCurl::is_use_sse; }
     static bool SetContentMd5(bool flag);
     static bool SetVerbose(bool flag);
-    static bool GetVerbose(void) { return S3fsCurl::is_verbose; }
+    static bool GetVerbose(void) { return OssfsCurl::is_verbose; }
     static bool SetAccessKey(const char* AccessKeyId, const char* SecretAccessKey);
     static bool IsSetAccessKeyId(void){
-                  return (0 < S3fsCurl::IAM_role.size() || (0 < S3fsCurl::AWSAccessKeyId.size() && 0 < S3fsCurl::AWSSecretAccessKey.size()));
+                  return (0 < OssfsCurl::IAM_role.size() || (0 < OssfsCurl::AWSAccessKeyId.size() && 0 < OssfsCurl::AWSSecretAccessKey.size()));
                 }
     static long SetSslVerifyHostname(long value);
-    static long GetSslVerifyHostname(void) { return S3fsCurl::ssl_verify_hostname; }
+    static long GetSslVerifyHostname(void) { return OssfsCurl::ssl_verify_hostname; }
     static int SetMaxParallelCount(int value);
     static std::string SetIAMRole(const char* role);
-    static const char* GetIAMRole(void) { return S3fsCurl::IAM_role.c_str(); }
+    static const char* GetIAMRole(void) { return OssfsCurl::IAM_role.c_str(); }
 
     // methods
     bool CreateCurlHandle(bool force = false);
@@ -318,19 +318,19 @@ class S3fsCurl
     bool IsUseAhbe(void) const { return is_use_ahbe; }
     int GetMultipartRetryCount(void) const { return retry_count; }
     void SetMultipartRetryCount(int retrycnt) { retry_count = retrycnt; }
-    bool IsOverMultipartRetryCount(void) const { return (retry_count >= S3fsCurl::retries); }
+    bool IsOverMultipartRetryCount(void) const { return (retry_count >= OssfsCurl::retries); }
 };
 
 //----------------------------------------------
-// class S3fsMultiCurl
+// class OssfsMultiCurl
 //----------------------------------------------
 // Class for lapping multi curl
 //
-typedef std::map<CURL*, S3fsCurl*> ossfscurlmap_t;
-typedef bool (*S3fsMultiSuccessCallback)(S3fsCurl* ossfscurl);    // callback for succeed multi request
-typedef S3fsCurl* (*S3fsMultiRetryCallback)(S3fsCurl* ossfscurl); // callback for failuer and retrying
+typedef std::map<CURL*, OssfsCurl*> ossfscurlmap_t;
+typedef bool (*OssfsMultiSuccessCallback)(OssfsCurl* ossfscurl);    // callback for succeed multi request
+typedef OssfsCurl* (*OssfsMultiRetryCallback)(OssfsCurl* ossfscurl); // callback for failuer and retrying
 
-class S3fsMultiCurl
+class OssfsMultiCurl
 {
   private:
     static int    max_multireq;
@@ -339,8 +339,8 @@ class S3fsMultiCurl
     ossfscurlmap_t cMap_all;  // all of curl requests
     ossfscurlmap_t cMap_req;  // curl requests are sent
 
-    S3fsMultiSuccessCallback SuccessCallback;
-    S3fsMultiRetryCallback   RetryCallback;
+    OssfsMultiSuccessCallback SuccessCallback;
+    OssfsMultiRetryCallback   RetryCallback;
 
   private:
     bool ClearEx(bool is_all);
@@ -348,16 +348,16 @@ class S3fsMultiCurl
     int MultiRead(void);
 
   public:
-    S3fsMultiCurl();
-    ~S3fsMultiCurl();
+    OssfsMultiCurl();
+    ~OssfsMultiCurl();
 
     static int SetMaxMultiRequest(int max);
-    static int GetMaxMultiRequest(void) { return S3fsMultiCurl::max_multireq; }
+    static int GetMaxMultiRequest(void) { return OssfsMultiCurl::max_multireq; }
 
-    S3fsMultiSuccessCallback SetSuccessCallback(S3fsMultiSuccessCallback function);
-    S3fsMultiRetryCallback SetRetryCallback(S3fsMultiRetryCallback function);
+    OssfsMultiSuccessCallback SetSuccessCallback(OssfsMultiSuccessCallback function);
+    OssfsMultiRetryCallback SetRetryCallback(OssfsMultiRetryCallback function);
     bool Clear(void) { return ClearEx(true); }
-    bool SetS3fsCurlObject(S3fsCurl* ossfscurl);
+    bool SetOssfsCurlObject(OssfsCurl* ossfscurl);
     int Request(void);
 };
 
@@ -400,4 +400,4 @@ std::string md5sum(int fd, off_t start, ssize_t size);
 struct curl_slist* curl_slist_sort_insert(struct curl_slist* list, const char* data);
 bool MakeUrlResource(const char* realpath, std::string& resourcepath, std::string& url);
 
-#endif // S3FS_CURL_H_
+#endif // OSSFS_CURL_H_

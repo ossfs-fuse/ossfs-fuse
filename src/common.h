@@ -1,5 +1,5 @@
-#ifndef S3FS_COMMON_H_
-#define S3FS_COMMON_H_
+#ifndef OSSFS_COMMON_H_
+#define OSSFS_COMMON_H_
 
 #include "../config.h"
 
@@ -85,4 +85,4 @@ extern std::string host;
 extern std::string bucket;
 extern std::string mount_prefix;
 
-#endif // S3FS_COMMON_H_
+#endif // OSSFS_COMMON_H_

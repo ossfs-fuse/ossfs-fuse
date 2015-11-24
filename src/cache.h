@@ -1,5 +1,5 @@
-#ifndef S3FS_CACHE_H_
-#define S3FS_CACHE_H_
+#ifndef OSSFS_CACHE_H_
+#define OSSFS_CACHE_H_
 
 #include "common.h"
 
@@ -104,4 +104,4 @@ class StatCache
 //
 bool convert_header_to_stat(const char* path, headers_t& meta, struct stat* pst, bool forcedir = false);
 
-#endif // S3FS_CACHE_H_
+#endif // OSSFS_CACHE_H_
