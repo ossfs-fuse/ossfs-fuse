@@ -3635,7 +3635,7 @@ bool MakeUrlResource(const char* realpath, string& resourcepath, string& url)
   //resourcepath = urlEncode(service_path + bucket + realpath);
   // Bryan: libcurl would use iconv to encode, so no need to encode here.
   resourcepath = service_path + bucket + realpath;
-  url          = host + resourcepath;
+  url          = host + urlEncode(resourcepath);
   return true;
 }
 
