@@ -139,17 +139,20 @@ def stop():
         print u"ossfs.json 配置错误，mount_dir 字段为空"
         exit(1)
 
+    running_flag = None
     status, output = getstatusoutput("ps -ef | grep './src/ossfs %s %s' | grep -v 'grep'" % (parameter_dict["bucket_name"],
                                                                                              parameter_dict["mount_dir"]))
     if status != 0:
-        return
-
-    ossfs_pid = output.split()[2]
-    status, output = getstatusoutput("kill -9 %s" % ossfs_pid)
-    if status != 0:
-        print u"停止失败，输出："
-        print output
-        exit(1)
+        running_flag = False
+    else:
+        running_flag = True
+    if running_flag:
+        ossfs_pid = output.split()[2]
+        status, output = getstatusoutput("kill -9 %s" % ossfs_pid)
+        if status != 0:
+            print u"停止失败，输出："
+            print output
+            exit(1)
 
     mounted_flag = None # whether mount_dir has been mounted
     status, output = getstatusoutput("df %s" % parameter_dict["mount_dir"])
@@ -202,7 +205,7 @@ def main():
         print u"Linux发行版检查失败，命令 lsb_release -a，输出："
         print output
         exit(1)
-    if search("Ubuntu 14.04 LTS", lsb_release) is not None:
+    if search("Ubuntu 14.04", lsb_release) is not None:
         lsb_release = "Ubuntu"
     elif search("CentOS Linux release 7", lsb_release) is not None:
         lsb_release = "CentOS"
