@@ -50,7 +50,7 @@ OSSFS-Fuse是实现将阿里云OSS bucket挂载成为阿里云ECS服务器本地
 
 6. 启动
 
-   进入ossfs-fuse项目目录，执行命令：./ossfs.py start
+   进入ossfs-fuse项目目录，执行命令：./ossfs.py start  
    备注：如果是刚下载来的代码，这个步骤中会自动进行./configure、make等工作，大概耗时30秒左右。如果在这个项目目录曾经启动过ossfs-fuse，不是第一次启动且环境未被破坏，大概耗时2秒左右。
 
 7. 重启
