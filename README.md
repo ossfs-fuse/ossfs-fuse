@@ -1,64 +1,65 @@
-THIS README.md CONTAINS OUTDATED INFORMATION - please refer to the wiki or --help
+# OSSFS-Fuse
 
-OSSFS-Fuse
-==========
+## 介绍
 
-OSSFS is FUSE (File System in User Space) based solution to mount/unmount an Aliyun OSS storage buckets and use system commands with OSS just like it was another Hard Disk.
+OSSFS-Fuse是实现将阿里云OSS bucket挂载成为阿里云ECS服务器本地盘功能的工具，方便阿里云用户快捷地使用OSS。
 
-In order to compile ossfs, You'll need the following requirements:
+## 支持系统
 
-* Kernel-devel packages (or kernel source) installed that is the SAME version of your running kernel
-* LibXML2-devel packages
-* CURL-devel packages (or compile curl from sources at: curl.haxx.se/ use 7.15.X)
-* GCC, GCC-C++
-* pkgconfig
-* FUSE (>= 2.8.4)
-* FUSE Kernel module installed and running (RHEL 4.x/CentOS 4.x users - read below)
-* OpenSSL-devel (0.9.8)
-* Subversion
+* Ubuntu 14.04 LTS 及以上
+* CentOS 7 及以上
 
-If you're using YUM or APT to install those packages, then it might require additional packaging, allow it to be installed.
+## 安装前准备
 
-Downloading & Compiling:
-------------------------
-In order to download ossfs, user the following command:
-git clone https://github.com/SnakeHunt2012/ossfs-fuse.git
+在阿里云(www.aliyun.com)官方网站上申请一台ECS机器，操作系统为CentOS 7 或者Ubuntu 14.04 (64bit)。
 
-Go inside the directory that has been created (ossfs-read-only/ossfs) and run: ./autogen.sh
-This will generate a number of scripts in the project directory, including a configure script which you should run with: ./configure
-If configure succeeded, you can now run: make. If it didn't, make sure you meet the dependencies above.
-This should compile the code. If everything goes OK, you'll be greated with "ok!" at the end and you'll have a binary file called "ossfs"
-in the src/ directory.
+## 安装步骤
 
-As root (you can use su, su -, sudo) do: "make install" -this will copy the "ossfs" binary to /usr/local/bin.
+1. 申请ECS:
 
-Congratulations. ossfs is now compiled and installed.
+   首先在阿里云申请一台ECS，操作系统版本为CentOS 7或者Ubuntu 14.04 (64bit)，申请和购买方法参照阿里云ECS，此处不赘述。
 
-Usage:
-------
-In order to use ossfs, make sure you have the Access Key and the Secret Key handy. (refer to the wiki)
-First, create a directory where to mount the OSS bucket you want to use.
-Example (as root): mkdir -p /mnt/oss
-Then run: ossfs mybucket[:path] /mnt/oss
+2. 通过ssh登陆到ECS机器:
 
-This will mount your bucket to /mnt/oss. You can do a simple "ls -l /mnt/oss" to see the content of your bucket.
+   您可以通过如putty/secureCRT等常用远程登陆软件，此处不赘述。
 
-If you want to allow other people access the same bucket in the same machine, you can add "-o allow _other" to read/write/delete content of the bucket.
+3. 下载ossfs代码到ECS机器
 
-You can add a fixed mount point in /etc/fstab, here's an example:
+   下载软件包，目前可以通过github下载到ossfs-fuse软件
+   下载命令：git clone https://github.com/ossfs-fuse/ossfs-fuse.git
 
-ossfs#mybucket /mnt/oss fuse allow_other 0 0
+4. 安装软件依赖组件:
 
-This will mount upon reboot (or by launching: mount -a) your bucket on your machine.
+   * CentOS 7:
+     root权限执行: ./centos-install-deps.sh
+   * Ubuntu 14.04:
+     root权限执行: ./ubuntu-install-deps.sh
 
-All other options can be read at: http://www.aliyun.com/product/oss
+5. 修改配置文件:
 
-Known Issues:
--------------
-ossfs should be working fine with OSS storage. However, There are couple of limitations:
+   ossfs-fuse的配置文件为ossfs.json，格式为:
+   ```json
+   {
+        "bucket_name" : "***",
+        "access_id" : "***",
+        "access_key" : "***",
+        "mount_dir" : "/mnt/***",
+        "region_url" : "http://***.aliyuncs.com"
+   }
+   ```
 
-* There is no full UID/GID support yet, everything looks as "root" and if you allow others to access the bucket, others can erase files. There is, however, permissions support built in.
-* Currently ossfs could hang the CPU if you have lots of time-outs. This is *NOT* a fault of ossfs but rather libcurl. This happends when you try to copy thousands of files in 1 session, it doesn't happend when you upload hundreds of files or less.
-* CentOS 4.x/RHEL 4.x users - if you use the kernel that shipped with your distribution and didn't upgrade to the latest kernel RedHat/CentOS gives, you might have a problem loading the "fuse" kernel. Please upgrade to the latest kernel (2.6.16 or above) and make sure "fuse" kernel module is compiled and loadable since FUSE requires this kernel module and ossfs requires it as well.
-* Moving/renaming/erasing files takes time since the whole file needs to be accessed first. A workaround could be to use ossfs's cache support with the use_cache option.
+6. 启动
 
+   进入ossfs-fuse项目目录，执行命令：./ossfs.py start
+   备注：如果是刚下载来的代码，这个步骤中会自动进行./configure、make等工作，大概耗时30秒左右。如果在这个项目目录曾经启动过ossfs-fuse，不是第一次启动且环境未被破坏，大概耗时2秒左右。
+
+7. 重启
+
+   进入ossfs-fuse项目目录，执行命令：./ossfs.py restart
+   备注：该步骤大概耗时2秒左右。
+
+8. 关闭
+
+   进入ossfs-fuse项目目录，执行命令：./ossfs.py stop
+   备注：该步骤大概耗时2秒左右。
+   
