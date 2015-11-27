@@ -47,6 +47,10 @@ OSSFS-Fuse是实现将阿里云OSS bucket挂载成为阿里云ECS服务器本地
         "region_url" : "http://***.aliyuncs.com"
    }
    ```
+   参数解释:  
+   | 参数名 | 取值范围 | 参数配置用途 |
+   |:-------|:---------|:-------------|
+   | region_url | "oss-cn-qingdao-internal.aliyuncs.com" <br> "oss-cn-beijing-internal.aliyuncs.com" <br> "oss-cn-shenzhen-internal.aliyuncs.com" <br> "oss-cn-hangzhou-internal.aliyuncs.com" <br> "oss-cn-hongkong-internal.aliyuncs.com" | 访问OSS使用的URL，OSS各地数据中心的URL不同，用户根据自己的ECS/OSS所在地进行选择，目前包括青岛/北京/深圳/杭州/香港。 <br> 注：运行ossfs-fuse的ECS主机需要跟OSS在同一个数据中心，确保ossfs-fuse与OSS通过内网高速访问，保证运行效率；
 
 6. 启动
 
