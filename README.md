@@ -48,12 +48,12 @@ OSSFS-Fuse是实现将阿里云OSS bucket挂载成为阿里云ECS服务器本地
    }
    ```
    参数解释:  
-   | 参数名 | 取值范围 | 参数配置用途 |
+   |参数名 | 取值范围 | 参数配置用途 |
    |:-------|:---------|:-------------|
-   | access_id | OSS的access id，在阿里云官方网站上获取 | 用于cloudfs与OSS通信鉴权使用 |
-   | access_key | OSS的access key，在阿里云官方网站上获取 | 用于cloudfs与OSS通信鉴权使用 |
-   | bucket_name | OSS Bucket 名字 | 需要挂在到ECS上的OSS Bucket名字 |
-   | mount_dir | 希望将bucket mount到本地的那个目录该目录可以自己创建，也可以不创建等工具自动创建 | 注意，如果这个目录已经存在，一定要保证是一个空目录 |
+   |access_id | OSS的access id，在阿里云官方网站上获取 | 用于cloudfs与OSS通信鉴权使用 |
+   |access_key | OSS的access key，在阿里云官方网站上获取 | 用于cloudfs与OSS通信鉴权使用 |
+   |bucket_name | OSS Bucket 名字 | 需要挂在到ECS上的OSS Bucket名字 |
+   |mount_dir | 希望将bucket mount到本地的那个目录该目录可以自己创建，也可以不创建等工具自动创建 | 注意，如果这个目录已经存在，一定要保证是一个空目录 |
    
 6. 启动
 
