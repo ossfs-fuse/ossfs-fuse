@@ -48,7 +48,7 @@ OSSFS-Fuse是实现将阿里云OSS bucket挂载成为阿里云ECS服务器本地
    }
    ```
    参数解释:
-   * region_url
+   * region_url  
      访问OSS使用的URL，OSS各地数据中心的URL不同，用户根据自己的ECS/OSS所在地进行选择，目前包括青岛/北京/深圳/杭州/香港。
      注：运行ossfs-fuse的ECS主机需要跟OSS在同一个数据中心，确保ossfs-fuse与OSS通过内网高速访问，保证运行效率，取值范围：
      - "http://oss-cn-qingdao-internal.aliyuncs.com"
@@ -61,13 +61,13 @@ OSSFS-Fuse是实现将阿里云OSS bucket挂载成为阿里云ECS服务器本地
      - "http://oss-cn-shenzhen.aliyuncs.com"
      - "http://oss-cn-hangzhou.aliyuncs.com"
      - "http://oss-cn-hongkong.aliyuncs.com"
-   * access_id
+   * access_id  
      OSS的access id，在阿里云官方网站上获取
-   * access_key
+   * access_key  
      OSS的access key，在阿里云官方网站上获取
-   * bucket_name
+   * bucket_name  
      需要挂在到ECS上的OSS Bucket名字
-   * mount_dir
+   * mount_dir  
      希望将bucket mount到本地的那个目录该目录可以自己创建，也可以不创建等工具自动创建。注意，如果这个目录已经存在，一定要保证是一个空目录。
      
      
