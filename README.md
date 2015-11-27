@@ -25,7 +25,7 @@ OSSFS-Fuse是实现将阿里云OSS bucket挂载成为阿里云ECS服务器本地
 
 3. 下载ossfs代码到ECS机器
 
-   下载软件包，目前可以通过github下载到ossfs-fuse软件
+   下载软件包，目前可以通过github下载ossfs-fuse软件  
    下载命令：git clone https://github.com/ossfs-fuse/ossfs-fuse.git
 
 4. 安装软件依赖组件:
@@ -55,11 +55,11 @@ OSSFS-Fuse是实现将阿里云OSS bucket挂载成为阿里云ECS服务器本地
 
 7. 重启
 
-   进入ossfs-fuse项目目录，执行命令：./ossfs.py restart
+   进入ossfs-fuse项目目录，执行命令：./ossfs.py restart  
    备注：该步骤大概耗时2秒左右。
 
 8. 关闭
 
-   进入ossfs-fuse项目目录，执行命令：./ossfs.py stop
+   进入ossfs-fuse项目目录，执行命令：./ossfs.py stop  
    备注：该步骤大概耗时2秒左右。
    
