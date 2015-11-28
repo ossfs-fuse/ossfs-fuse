@@ -11,7 +11,7 @@ OSSFS-Fuse是实现将阿里云OSS bucket挂载成为阿里云ECS服务器本地
 
 ## 安装前准备
 
-在阿里云(www.aliyun.com)官方网站上申请一台ECS机器，操作系统为CentOS 7 或者Ubuntu 14.04 (64bit)。
+在阿里云( www.aliyun.com )官方网站上申请一台ECS机器，操作系统为CentOS 7 或者Ubuntu 14.04 (64bit)。
 
 ## 安装步骤
 
