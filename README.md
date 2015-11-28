@@ -11,7 +11,7 @@ OSSFS-Fuse是实现将阿里云OSS bucket挂载成为阿里云ECS服务器本地
 
 ## 安装前准备
 
-在阿里云(www.aliyun.com)官方网站上申请一台ECS机器，操作系统为CentOS 7 或者Ubuntu 14.04 (64bit)。
+在阿里云( www.aliyun.com )官方网站上申请一台ECS机器，操作系统为CentOS 7 或者Ubuntu 14.04 (64bit)。
 
 ## 安装步骤
 
@@ -70,9 +70,6 @@ OSSFS-Fuse是实现将阿里云OSS bucket挂载成为阿里云ECS服务器本地
    * mount_dir  
      希望将bucket mount到本地的那个目录该目录可以自己创建，也可以不创建等工具自动创建。注意，如果这个目录已经存在，一定要保证是一个空目录。
      
-     
-定要保证是一个空目录 |
-   
 6. 启动
 
    进入ossfs-fuse项目目录，执行命令：```./ossfs.py start```  
