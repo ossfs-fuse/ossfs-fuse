@@ -466,11 +466,13 @@ string get_username(uid_t uid)
 
   // make buffer
   if(0 == maxlen){
-    if(0 > (maxlen = (size_t)sysconf(_SC_GETPW_R_SIZE_MAX))){
+    long ret = sysconf(_SC_GETPW_R_SIZE_MAX);
+    if(ret < 0){
       DPRNNN("could not get max pw length.");
       maxlen = 0;
       return string("");
     }
+    maxlen = static_cast<size_t>(ret);
   }
   if(NULL == (pbuf = (char*)malloc(sizeof(char) * maxlen))){
     DPRNCRIT("failed to allocate memory.");
@@ -502,11 +504,13 @@ int is_uid_inculde_group(uid_t uid, gid_t gid)
 
   // make buffer
   if(0 == maxlen){
-    if(0 > (maxlen = (size_t)sysconf(_SC_GETGR_R_SIZE_MAX))){
+    long ret = sysconf(_SC_GETGR_R_SIZE_MAX);
+    if(ret < 0){
       DPRNNN("could not get max name length.");
       maxlen = 0;
       return -ERANGE;
     }
+    maxlen = static_cast<size_t>(ret);
   }
   if(NULL == (pbuf = (char*)malloc(sizeof(char) * maxlen))){
     DPRNCRIT("failed to allocate memory.");
