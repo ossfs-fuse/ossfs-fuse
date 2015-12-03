@@ -27,9 +27,24 @@ AM_INIT_AUTOMAKE()
 AC_PROG_CXX
 AC_PROG_CC
 
+dnl ----------------------------------------------
+dnl For OSX
+dnl ----------------------------------------------
+case "$target" in
+   *-darwin* )
+      # Do something specific for mac
+      min_fuse_version=2.7.3
+      ;;
+   *)
+      # Default Case
+      # assume other supported linux system
+      min_fuse_version=2.8.4
+      ;;
+esac
+
 CXXFLAGS="$CXXFLAGS -Wall -D_FILE_OFFSET_BITS=64"
 
-PKG_CHECK_MODULES([DEPS], [fuse >= 2.8.4 libcurl >= 7.0 libxml-2.0 >= 2.6 libcrypto >= 0.9])
+PKG_CHECK_MODULES([DEPS], [fuse >= ${min_fuse_version} libcurl >= 7.0 libxml-2.0 >= 2.6 libcrypto >= 0.9])
 
 dnl ----------------------------------------------
 dnl check functions

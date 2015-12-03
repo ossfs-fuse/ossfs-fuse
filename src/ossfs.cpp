@@ -2746,9 +2746,11 @@ static void* ossfs_init(struct fuse_conn_info* conn)
   }
 
   // Investigate system capabilities
+#ifndef __APPLE__
   if((unsigned int)conn->capable & FUSE_CAP_ATOMIC_O_TRUNC){
      conn->want |= FUSE_CAP_ATOMIC_O_TRUNC;
   }
+#endif
   // cache
   if(is_remove_cache && !FdManager::DeleteCacheDirectory()){
     DPRNINFO("Could not inilialize cache directory.");
@@ -3219,7 +3221,7 @@ static int read_passwd_file(void)
   size_t first_pos = string::npos;
   size_t last_pos = string::npos;
   bool default_found = 0;
-  bool aws_format;
+  int aws_format;
 
   // if you got here, the password file
   // exists and is readable by the
